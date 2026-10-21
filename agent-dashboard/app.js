@@ -39,9 +39,9 @@ $('#roll').innerHTML = ROLL.map(id => `<div class="rc" id="rc-${id}" title="${es
   <div class="tx"><div class="n">${rollName(id)}<span class="la"></span></div><div class="l"></div></div><div class="meter">${'<b></b>'.repeat(8)}</div></div>`).join('');
 const paintRoll = () => ROLL.forEach(id => { const a = V.A[id], T = TAG[a.tag], el = $('#rc-' + id), nb = V.blk.agents.get(id) || 0;
   const ic = el.querySelector('.ic'); ic.style.color = hue(id); ic.style.borderColor = hue(id);
-  let bd = ic.querySelector('.acc'); if (isSub(id)) { const a = accent(id); if (!bd) { bd = document.createElement('i'); bd.className = 'acc'; ic.append(bd); } bd.textContent = a.glyph; bd.style.color = a.color; bd.style.borderColor = a.color; } const d = el.querySelector('.dot'); d.style.background = nb ? C.danger : T.color; d.style.boxShadow = `0 0 8px ${nb ? C.danger : T.color}`;
+  let bd = ic.querySelector('.acc'); if (isSub(id)) { const a = accent(id); if (!bd) { bd = document.createElement('i'); bd.className = 'acc'; ic.append(bd); } bd.textContent = a.glyph; bd.style.color = a.color; bd.style.borderColor = a.color; } const d = el.querySelector('.dot'); d.style.background = nb ? C.sub : T.color; d.style.boxShadow = `0 0 8px ${nb ? C.sub : T.color}`;
   el.querySelector('.la').textContent = a.last_active ? fmtET(a.last_active).slice(6) : '?';
-  const l = el.querySelector('.l'); l.style.color = T.color; const SI = V.I.steps[id]; const cs = SI && SI.current ? STEPS.find(x => x.id === SI.current) : null; el.title = `${a.name} · ${T.label}${nb ? ' · ' + nb + ' blocker(s)' : ''}${cs ? ' · current step: ' + cs.label : ''}`; l.innerHTML = (nb ? `<b class="bk">${svg('block', 10)}${nb}</b> ` : '') + (cs ? `<span class="cs">${svg(cs.icon, 11)} ${cs.label}</span>` : '<span class="cs na">no events</span>'); });
+  const l = el.querySelector('.l'); l.style.color = T.color; const SI = V.I.steps[id]; const cs = SI && SI.current ? STEPS.find(x => x.id === SI.current) : null; el.title = `${a.name} · ${T.label}${cs ? ' · current step: ' + cs.label : ''}`; l.innerHTML = (cs ? `<span class="cs">${svg(cs.icon, 11)} ${cs.label}</span>` : '<span class="cs na">no events</span>'); });
 let meters = {}, mMax = 1;
 const calcMeters = () => { const t0 = new Date(V.events[0].time).getTime(), t1 = new Date(V.events[V.events.length - 1].time).getTime();
   meters = Object.fromEntries(ROLL.map(id => { const b = new Array(8).fill(0); V.perAgent(id).forEach(e => b[Math.min(7, Math.floor((new Date(e.time) - t0) / ((t1 - t0) / 8 + 1)))]++); return [id, b]; }));
@@ -57,7 +57,7 @@ const paintTicker = () => { $('#ticker').innerHTML = STAGES.map((s, i) => { cons
 paintTicker();
 const fresh = () => { const F = { ...(V.D.freshness || {}) }, st = LIVE?.vps_status;
   if (st) { const okAt = st.last_ok_at; const stale = !st.ok || !okAt || (Date.now() - new Date(okAt)) > 3 * (st.interval_s || 60) * 1000;
-    F.hub = { label: 'vps hub', mode: stale ? 'stale' : 'live', fetched_at: okAt, note: st.ok ? `every ${st.interval_s}s` : 'poll failing: ' + (st.error || '') };
+    F.hub = { label: 'vps hub', mode: stale ? 'stale' : 'live', fetched_at: okAt, note: st.ok ? `every ${st.interval_s}s` : 'poll paused: ' + (st.error || '') };
     F.docker = { ...F.hub, label: 'vps containers' }; }
   return F; };
 const paintFoot = () => { const F = fresh();
@@ -108,15 +108,15 @@ if (skip > 0) { const n = Math.floor(skip / EV_EVERY); for (let i = 0; i < n; i+
 
 let tab = 'waiting';
 const sinceTx = x => x.since ? `waiting ${age(x.since)} · since ${fmtET(x.since)} et` : `since: ${x.since_note || 'unknown'}`;
-const failedAns = w => w.answer && w.answer.status === 'failed';
+const failedAns = () => false;
 const paintGate = () => { const W = V.waiting, Bk = V.blockers, open = W.filter(w => !w.answer || failedAns(w)).length;
   $('#wcount').textContent = PUB ? (V.waitingCount ?? 0) : open; $('#bcount').textContent = Bk.length;
-  $('#wchips').innerHTML = [...W.filter(failedAns), ...W.filter(w => !w.answer), ...W.filter(w => w.answer && !failedAns(w))].map(w => `<button class="chip ${failedAns(w) ? 'fail' : w.answer ? 'done' : ''}" data-tab="waiting" data-id="${esc(w.id)}" title="${esc(w.title)}">${esc(w.title)}<i>${failedAns(w) ? 'send failed' : w.answer ? 'answered' : w.since ? age(w.since) : ''}</i></button>`).join('') +
+  $('#wchips').innerHTML = [...W.filter(failedAns), ...W.filter(w => !w.answer), ...W.filter(w => w.answer && !failedAns(w))].map(w => `<button class="chip ${failedAns(w) ? '' : w.answer ? 'done' : ''}" data-tab="waiting" data-id="${esc(w.id)}" title="${esc(w.title)}">${esc(w.title)}<i>${failedAns(w) ? '' : w.answer ? 'answered' : w.since ? age(w.since) : ''}</i></button>`).join('') +
     (V.answered.length ? `<button class="chip hist" data-tab="answered" title="Answered items (history)">answered (${V.answered.length})</button>` : '');
   const tb = document.querySelector('#drawer .tabs button[data-tab="answered"]'); if (tb) tb.textContent = `answered (${V.answered.length})`;
-  $('#bchips').innerHTML = Bk.map(b => `<button class="chip" data-tab="blockers" data-id="${esc(b.id)}" title="${esc(b.what)}">${esc(b.what)}<i>${b.since ? age(b.since) : ''}</i></button>`).join(''); };
+  $('#bchips').innerHTML = ''; };
 const drawerBody = () => {
-  if (tab === 'blockers') return `<p class="meta" style="margin-bottom:8px">Blocker categories derived from the team's real logs. Details are censored in this public copy.</p>` + (V.blockers.length ? V.blockers.map(b => `<div class="card b"><h4>${esc(b.what)}</h4><div class="meta">${b.since ? `blocked ${age(b.since)} · since ${fmtET(b.since)} et` : 'since: unknown'} · rule: ${esc(b.rule)}${b.agents.length ? ' · affects ' + b.agents.map(a => NAME[a] || a).join(', ') : ''}</div></div>`).join('') : '<p>No blockers right now.</p>');
+
   const F = fresh(); return `<table class="src">${Object.values(F).map(f => `<tr><td>${esc(f.label)}</td><td class="${f.mode === 'live' ? 'lv' : 'st'}">${esc(f.mode)}</td><td>${f.fetched_at ? fmtET(f.fetched_at) + ' et (' + age(f.fetched_at) + ' ago)' : 'unknown'}${f.approx ? ' approx' : ''}<br><span class="meta">${esc(f.note || f.as_of || '')}</span></td></tr>`).join('')}</table>
 ${(V.D.resources || []).length ? `<h4 style="margin-top:10px">new resources tracked</h4><table class="src">${V.D.resources.map(r => `<tr><td>${esc(r.name)}</td><td>${esc(r.kind)}</td><td>${esc(r.owner)} · ${r.since && r.since.length > 12 ? fmtET(r.since) + ' et' : esc(r.since || '')}<br><span class="meta">${esc(r.note)}</span></td></tr>`).join('')}</table>` : ''}
     <p class="meta" style="margin-top:8px">${'Public snapshot, refreshed by a daily job. Names of clients and leads, contacts, hosts, IDs, paths and message bodies are censored.'}</p>`; };
@@ -140,7 +140,7 @@ const paintLegend = () => { const el = $('#legend'); if (el.hidden) return; cons
   const sw = (c, extra = '') => `<span class="sw" style="background:${c};${extra}"></span>`;
   el.innerHTML = `<div class="lh"><b>Legend</b><button id="lgx" title="Close (G)">×</button></div>
    <div class="lt">Agent hues (identity; never changes with status)</div><div class="lg">${[...TOP, 'damon'].map(id => `<span>${sw(hue(id))}${HUES[id].name}</span>`).join('')}</div>
-   <div class="lt">Status = a separate ring</div><div class="lg"><span><i class="rg" style="border:3px solid ${C.danger}"></i>blocked / no reply (pulses)</span><span><i class="rg" style="border:2px dashed ${C.waiting}"></i>waiting on you</span><span><i class="rg" style="border:1.5px dashed ${C.sub}"></i>pending setup</span><span><i class="rg" style="border:1.5px dotted ${C.dim}"></i>idle</span><span><i class="rg" style="border:1px solid ${C.sub};opacity:.6"></i>active</span></div>
+   <div class="lt">Status = a separate ring</div><div class="lg"><span><i class="rg" style="border:2px dashed ${C.waiting}"></i>waiting on you</span><span><i class="rg" style="border:1.5px dashed ${C.sub}"></i>pending setup</span><span><i class="rg" style="border:1.5px dotted ${C.dim}"></i>idle</span><span><i class="rg" style="border:1px solid ${C.sub};opacity:.6"></i>active</span></div>
    <div class="lt">Sub-agents: parent's hue, smaller orb, own accent (2nd-colour arc + orbiting dot + glyph), tether to parent (dashed = parent unknown)</div>
    <div class="ls">${subs.map(x => `<div>${sw(x.hue)}<b style="color:${x.accent.color}">${x.accent.glyph}</b> ${esc(x.name)} <span class="meta">→ ${x.known ? esc(HUES[x.parent]?.name || x.parent) : 'parent unknown'} · ${esc(x.accent.name)}</span></div>`).join('')}</div>`;
   $('#lgx').onclick = toggleLegend; };

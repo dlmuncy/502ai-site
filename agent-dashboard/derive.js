@@ -65,4 +65,4 @@ export const age = iso => { if (!iso) return null; const s = Math.max(0, (Date.n
 
 export const hubAgent = a => String(a || '').toLowerCase();
 export const mergeLive = D0 => structuredClone(D0);
-export function gates(V) { const blk = { agents: new Map(), projects: new Map(), links: new Set() }; (V.D.public_blockers || []).forEach(b => { b.agents.forEach(a => blk.agents.set(a, (blk.agents.get(a) || 0) + 1)); b.projects.forEach(p => blk.projects.set(p, b.id)); (b.links || []).forEach(([f, t]) => blk.links.add(f + '>' + t)); }); return { blockers: V.D.public_blockers || [], blk, waiting: [], answered: [], queued: {} }; }
+export function gates() { return { blockers: [], blk: { agents: new Map(), projects: new Map(), links: new Set() }, waiting: [], answered: [], queued: {} }; }

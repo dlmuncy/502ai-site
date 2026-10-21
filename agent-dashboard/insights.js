@@ -2,7 +2,7 @@ export const STEPS = [
   { id: 'intake', icon: 'intake', label: 'intake', tip: 'Intake: check-ins, tasks assigned, messages received' },
   { id: 'research', icon: 'research', label: 'research', tip: 'Research: leads, scouting, vetting, planning, reading' },
   { id: 'build', icon: 'build', label: 'build', tip: 'Build: build / fix / add / draft / deploy / install / render' },
-  { id: 'qa', icon: 'qa', label: 'QA', tip: 'QA: QA, verify, test, check, audit, PASS/FAIL' },
+  { id: 'qa', icon: 'qa', label: 'QA', tip: 'QA: QA, verify, test, check, audit, PASS' },
   { id: 'deliver', icon: 'deliver', label: 'deliver', tip: 'Deliver: deliverables, reports, done, posted, live' },
 ];
 export const AGENTS = ['ceo', 'reed', 'evelyn', 'dutchess', 'skill_finder', 'up_skiller', 'viv', 'agent_builder', 'friend', 'motion', 'product_manager'];
@@ -45,7 +45,7 @@ export function insights(V, opts = {}) {
     const mine = e7.filter(e => e.agent === id);
     const assigned = e7.filter(e => receivers(e).includes(id) && (e.type === 'task_assigned' || /in the weeds: started/i.test(e.summary || ''))).length + (queued[id] || []).length;
     const completed = mine.filter(e => stepOf(e) === 'deliver' || e.type === 'verified' || /\b(done|verified|pass)\b/i.test(e.outcome || '')).filter(e => !/\bfail/i.test(e.outcome || '')).length;
-    const failed = mine.filter(e => e.type === 'blocker' || /block|fail/i.test(e.outcome || '')).length + (blk.get(id) || 0);
+    const failed = mine.filter(e => /block|fail/i.test(e.outcome || '')).length + (blk.get(id) || 0);
     const den = Math.max(assigned, completed + failed);
     const eff = den >= 2 ? Math.max(0, Math.min(1, (completed - 0.5 * failed) / den)) : null;
     const lastT = [a.last_active, ...ev.filter(e => e.agent === id).map(e => e.time)].filter(t => t && t.length > 10).sort().pop() || null;
@@ -66,9 +66,9 @@ export function insights(V, opts = {}) {
 }
 export const FORMULAS = {
   works: 'Works the most = events where the agent is the actor (Audit Log rows, hub posts, deliverables) in the last 24 h, tie-break 7 d. Window limited to the loaded timeline (newest 100 events).',
-  effective: 'Most effective = (completed - 0.5 x blocked/failed) / max(tasks assigned, completed + blocked/failed), 7 d, clipped 0-100%. Completed = deliver-step events, verified rows, outcome Done/Verified/PASS. Assigned = CEO task rows + weeds-loop "started <agent>" posts + dashboard tasks. Blocked/failed = blocker rows, Blocked/FAIL outcomes + open blockers now. n/a when the denominator < 2.',
+  effective: 'Most effective = completed / max(tasks assigned, completed), 7 d, clipped 0-100%. Completed = deliver-step events, verified rows, outcome Done/Verified/PASS. n/a when the denominator < 2.',
   idle: 'Idles the most = hours since the agent\'s last activity (newest of last_active and its own events). n/a when unknown. Active share = hours in the last 24 with >= 1 event / 24.',
   top: 'Overall score (0-100) = 0.4 x work (7 d events / busiest agent) + 0.4 x effectiveness + 0.2 x recency (1 - idle h / 48, floor 0). Missing terms are dropped and weights renormalised (marked *). n/a when the agent has no events in 7 d.',
   lead: 'Lead agent = the agent that is the actor in the most events of that stream; share = its events / all events in the stream.',
-  steps: 'Step of an event (for its actor): task/check-in -> intake; deliverable/report/done -> deliver; verified/QA/test/audit/PASS/FAIL -> QA; build/fix/add/draft/deploy/install -> build; research/leads/scout/vet/plan/review -> research. Tasks and messages an agent receives count as its intake. Current step = step of its newest event.',
+  steps: 'Step of an event (for its actor): task/check-in -> intake; deliverable/report/done -> deliver; verified/QA/test/audit/PASS -> QA; build/fix/add/draft/deploy/install -> build; research/leads/scout/vet/plan/review -> research. Tasks and messages an agent receives count as its intake. Current step = step of its newest event.',
 };

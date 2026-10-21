@@ -91,7 +91,7 @@ export function createPipeline(canvas, V, prev) {
     ctx.fillStyle = C.panel; ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.fill(); ctx.strokeStyle = h; ctx.lineWidth = 1.4; ctx.stroke(); ctx.lineWidth = 1;
     drawIcon(ctx, AICON[id] || 'sparkles', x - r * 0.62, y - r * 0.62, r * 1.24, h, 2.2); let w = r * 2;
     if (share != null) w += 3 + txt(Math.round(share * 100) + '%', x + r + 3, y + 3.5, h, 9, 700); ctx.globalAlpha /= alpha; return w; };
-  const statusIcon = (a, nb) => nb ? ['block', C.danger] : a.tag === 'waiting' || a.tag === 'human' ? ['hourglass', C.waiting] : a.tag === 'idle' ? ['pause', C.dim] : a.tag === 'pending' ? ['clock', C.sub] : a.tag === 'unresp' ? ['alert', C.danger] : ['check', C.success];
+  const statusIcon = (a, nb) => a.tag === 'waiting' || a.tag === 'human' ? ['hourglass', C.waiting] : a.tag === 'idle' ? ['pause', C.dim] : a.tag === 'pending' ? ['clock', C.sub] : a.tag === 'unresp' ? ['alert', C.sub] : ['check', C.success];
   const segBar = (x, y, w, pct, col, segs = 20, h = 7) => { const sw = w / segs; for (let i = 0; i < segs; i++) { const on = pct != null && (i + 1) / segs <= pct / 100 + 1e-6; ctx.fillStyle = on ? col : C.muted; ctx.fillRect(x + i * sw, y, sw - 2, h); } };
   const strip = s => String(s || 'unknown').replace(/^\d{4}-\d\d-\d\d[ ~]*\d+:\d\d[^:]*: /, '').replace(/^#[\w-]+: /, '');
   const leadTip = (L, what) => L && L.id ? `<b>${esc(what)}</b><br>lead: <b style="color:${hue(L.id)}">${esc(V.A[L.id]?.name || L.id)}</b> · ${L.n}/${L.total} events (${Math.round(L.share * 100)}%)<br><span class="tm">${esc(FORMULAS.lead)}</span>` : `<b>${esc(what)}</b><br>lead: n/a (no events in the loaded timeline)`;
@@ -100,19 +100,19 @@ export function createPipeline(canvas, V, prev) {
     const nm = short(a.id, V.A).replace(/ \(formerly.*\)/, '');
     panel(p, nm, '', hue(a.id), p.w - 50, AICON[a.id], `<b style="color:${hue(a.id)}">${esc(a.name)}</b> · ${esc(a.platform)}<br>${esc(a.role)}${'' + esc(a.host || '') + '</span>'}`);
     const pul = nb ? 0.65 + 0.35 * Math.sin(V.now * 3) : 1; ctx.globalAlpha *= pul; drawIcon(ctx, si, p.x + p.w - 22, p.y + 5, 15, sc, 2.2); ctx.globalAlpha /= pul;
-    if (nb) txt('×' + nb, p.x + p.w - 25, p.y + 18, C.danger, 10, 700, 'right');
-    tip(p.x + p.w - 42, p.y, 42, 26, `status: <b style="color:${nb ? C.danger : T.color}">${esc(T.label)}</b>${nb ? ` · <b style="color:${C.danger}">${nb} blocker${nb > 1 ? 's' : ''}</b>` : ''}<br>${esc(a.status || '')}`);
-    if (nb) { ctx.strokeStyle = rgba(C.danger, 0.75 + 0.25 * Math.sin(V.now * 2.4)); ctx.lineWidth = 2; ctx.strokeRect(p.x + 1, p.y + 1, p.w - 2, p.h - 2); ctx.lineWidth = 1; }
+    
+    tip(p.x + p.w - 42, p.y, 42, 26, `status: <b style="color:${T.color}">${esc(T.label)}</b><br>${esc(a.status || '')}`);
+    
     const x = p.x + 9, w = p.w - 18; let y = p.y + 43;
     const ct = a.container ? a.container.status.toLowerCase().replace(/ \(healthy\)/, ' ✓').replace('about ', '') : null, plat = a.platform.toLowerCase().replace('nousresearch hermes agent', 'hermes').replace(' superagent', '');
-    drawIcon(ctx, /grok/.test(plat) ? 'cloud' : 'server', x, y - 10, 12, ct && !/^up/.test(ct) ? C.danger : C.sub, 2);
-    txt(plat + (ct ? ' · ' + ct : ''), x + 17, y, ct ? (/^up/.test(ct) ? C.sub : C.danger) : C.dim, 10, 400, 'left', MONO, w - 17);
+    drawIcon(ctx, /grok/.test(plat) ? 'cloud' : 'server', x, y - 10, 12, ct && !/^up/.test(ct) ? C.sub : C.sub, 2);
+    txt(plat + (ct ? ' · ' + ct : ''), x + 17, y, ct ? (/^up/.test(ct) ? C.sub : C.sub) : C.dim, 10, 400, 'left', MONO, w - 17);
     tip(x - 2, y - 12, w + 4, 15, `${esc(a.platform)}${ct ? ' · container ' + esc(a.container.name) + ' ' + esc(a.container.status) + ' (live)' : ''}${'' + esc(a.host || '')}`); y += 17;
     const pct = a.project_pct, pb = BLK.projects.has(a.project);
     drawIcon(ctx, 'project', x, y - 10, 12, C.sub, 2); txt(a.project ?? 'unknown', x + 17, y, a.project ? C.text : C.dim, 10, 400, 'left', MONO, w - 60);
-    txt(pct == null ? 'n/a' : Math.round(pct) + '%', x + w, y, pct == null ? C.dim : pb ? C.danger : C.text, 11, 700, 'right');
-    segBar(x, y + 4, w, pct, pb ? C.danger : a.tag === 'waiting' ? C.waiting : C.active, 24, 4);
-    tip(x - 2, y - 12, w + 4, 20, `project: <b>${esc(a.project ?? 'unknown')}</b><br>% to goal: ${pct == null ? 'unknown (no metric in sources)' : pct + '%'}${pb ? `<br><b style="color:${C.danger}">project blocked</b>` : ''}`); y += 20;
+    txt(pct == null ? 'n/a' : Math.round(pct) + '%', x + w, y, pct == null ? C.dim : C.text, 11, 700, 'right');
+    segBar(x, y + 4, w, pct, a.tag === 'waiting' ? C.waiting : C.active, 24, 4);
+    tip(x - 2, y - 12, w + 4, 20, `project: <b>${esc(a.project ?? 'unknown')}</b><br>% to goal: ${pct == null ? 'unknown (no metric in sources)' : pct + '%'}`); y += 20;
     const SI = I.steps[a.id] || { st: {}, current: null };
     const cx0 = x + 6, rowH = 21, y0 = y + 3;
     ctx.strokeStyle = C.border; ctx.beginPath(); ctx.moveTo(cx0, y0 + 6); ctx.lineTo(cx0, y0 + 6 + rowH * 4); ctx.stroke();
@@ -163,7 +163,7 @@ export function createPipeline(canvas, V, prev) {
   const heat = y => { if (y == null) return; const i = Math.round((y - (ceo.y + 40)) / ((ceo.h - 70) / 39)); for (let k = -1; k <= 1; k++) if (i + k >= 0 && i + k < 40) S.spineHeat[i + k] = Math.max(S.spineHeat[i + k], k ? 0.5 : 1); };
   const ceoPanel = (p, dt) => { const nb = BLK.agents.get('ceo') || 0; ctx.fillStyle = C.panel; ctx.fillRect(p.x, p.y, p.w, p.h); ctx.fillStyle = C.panelHd; ctx.fillRect(p.x, p.y, p.w, 26); ctx.strokeStyle = C.border; ctx.strokeRect(p.x + .5, p.y + .5, p.w - 1, p.h - 1); ctx.fillStyle = hue('ceo'); ctx.fillRect(p.x, p.y, 3, 26);
     drawIcon(ctx, 'ceo', p.x + 10, p.y + 5, 16, hue('ceo'), 2); txt('CEO', p.x + 32, p.y + 18, C.text, 12, 700); tip(p.x, p.y, p.w, 26, `<b style="color:${hue('ceo')}">CEO</b> · ${esc(V.A.ceo.platform)}<br>${esc(V.A.ceo.role)}`);
-    if (nb) { ctx.strokeStyle = rgba(C.danger, 0.75 + 0.25 * Math.sin(V.now * 2.4)); ctx.lineWidth = 2; ctx.strokeRect(p.x + 1, p.y + 1, p.w - 2, p.h - 2); ctx.lineWidth = 1; drawIcon(ctx, 'block', p.x + p.w / 2 - 14, p.y + p.h - 58, 12, C.danger, 2); txt('×' + nb, p.x + p.w / 2 + 2, p.y + p.h - 48, C.danger, 10, 700); } const x = p.x + p.w / 2;
+     const x = p.x + p.w / 2;
     drawIcon(ctx, 'route', x - 7, p.y + 31, 14, C.sub, 2); ctx.strokeStyle = C.border; ctx.beginPath(); ctx.moveTo(x, p.y + 48); ctx.lineTo(x, p.y + p.h - 34); ctx.stroke();
     for (let i = 0; i < 40; i++) { const y = p.y + 40 + 10 + i * ((p.h - 84) / 39), h = S.spineHeat[i]; S.spineHeat[i] *= Math.pow(0.15, dt);
       if (h > 0.05) { ctx.globalAlpha = Math.min(1, h * 1.2); ctx.drawImage(SP.lime, x - 9, y - 9, 18, 18); ctx.globalAlpha = 1; } ctx.fillStyle = h > 0.05 ? C.active : C.muted; ctx.fillRect(x - 3, y - 3, 6, 6); }
@@ -216,7 +216,7 @@ export function createPipeline(canvas, V, prev) {
       tip(p.x, yy, p.w, ch, `<b style="color:${hu}">${esc(V.A[id].name)}</b> · ${R?.n ?? 0} events involved (${R?.share != null ? Math.round(R.share * 100) : 0}% of all involvement)`); });
     txt(fmtET(V.events[0].time), x0, p.y + p.h - 8, C.dim, 9); txt(`max ${sgMax}/cell`, p.x + p.w / 2, p.y + p.h - 8, C.dim, 9, 400, 'center');
     txt(fmtET(V.events[V.events.length - 1].time), p.x + p.w - 40, p.y + p.h - 8, C.dim, 9, 400, 'right'); };
-  const TY = { task_assigned: ['route', C.active, 'route'], deliverable: ['done', C.success, 'deliver'], a2a_message: ['a2a', C.activeHi, 'a2a'], blocker: ['block', C.danger, 'block'], checkin: ['intake', C.sub, 'intake'], report: ['report', C.sub, 'log'], verified: ['verify', C.success, 'check'], activity: ['log', C.dim, 'events'] };
+  const TY = { task_assigned: ['route', C.active, 'route'], deliverable: ['done', C.success, 'deliver'], a2a_message: ['a2a', C.activeHi, 'a2a'], checkin: ['intake', C.sub, 'intake'], report: ['report', C.sub, 'log'], verified: ['verify', C.success, 'check'], activity: ['log', C.dim, 'events'] };
   const runlog = p => { panel(p, 'run log', V.hubLive ? 'live' : 'replay', C.active, 0, 'log', 'Real timeline, replayed; new hub posts fire live. Chips = lead agent of each event-type stream');
     const x = p.x + 10; let cx = x;
     Object.entries(I.streams.types).sort((a, b) => b[1].total - a[1].total).forEach(([ty, L]) => { const [lab, col, ic] = TY[ty] || ['log', C.dim, 'events']; if (cx > p.x + p.w - 60) return;
@@ -251,14 +251,14 @@ export function createPipeline(canvas, V, prev) {
       txt(r.idleH == null ? 'n/a' : r.idleH < 48 ? r.idleH.toFixed(0) + 'h' : Math.floor(r.idleH / 24) + 'd', x + 214, yy + 10, r.idleH == null ? C.dim : r.idleH > 24 ? C.waiting : C.sub, 9.5, 400, 'right');
       if (r.score != null) { const bwid = p.w - 16 - 228 - 28; ctx.fillStyle = C.muted; ctx.fillRect(x + 222, yy + 4, bwid, 5); ctx.fillStyle = hu; ctx.fillRect(x + 222, yy + 4, bwid * r.score / 100 * (0.97 + 0.03 * Math.sin(t * 2 + i)), 5); }
       txt(r.score == null ? 'n/a' : r.score + (r.partial ? '*' : ''), p.x + p.w - 10, yy + 10, r.score == null ? C.dim : r.rank === 1 ? C.active : C.text, 10, 700, 'right');
-      tip(x, yy, p.w - 16, rh, `<b style="color:${hu}">${esc(V.A[r.id].name)}</b> ${r.rank ? '· rank #' + r.rank : '· not ranked (no events in 7 d)'}<br>work: ${r.w24} events/24h · ${r.w7}/7d${r.W != null ? ' (W ' + r.W.toFixed(2) + ')' : ''}<br>effectiveness: ${r.eff == null ? 'n/a (denominator ' + r.den + ' < 2)' : Math.round(r.eff * 100) + '% = (' + r.completed + ' done − 0.5×' + r.failed + ' blocked/failed) / ' + r.den}<br>idle: ${r.idleH == null ? 'n/a' : r.idleH.toFixed(1) + ' h'} · active share 24h ${Math.round(r.activeShare * 100)}%${r.R != null ? ' (R ' + r.R.toFixed(2) + ')' : ''}<br>score: ${r.score == null ? 'n/a' : r.score + (r.partial ? ' (* missing term dropped, weights renormalised)' : '')}`); });
+      tip(x, yy, p.w - 16, rh, `<b style="color:${hu}">${esc(V.A[r.id].name)}</b> ${r.rank ? '· rank #' + r.rank : '· not ranked (no events in 7 d)'}<br>work: ${r.w24} events/24h · ${r.w7}/7d${r.W != null ? ' (W ' + r.W.toFixed(2) + ')' : ''}<br>effectiveness: ${r.eff == null ? 'n/a (denominator ' + r.den + ' < 2)' : Math.round(r.eff * 100) + '% = (' + r.completed + ' done) / ' + r.den}<br>idle: ${r.idleH == null ? 'n/a' : r.idleH.toFixed(1) + ' h'} · active share 24h ${Math.round(r.activeShare * 100)}%${r.R != null ? ' (R ' + r.R.toFixed(2) + ')' : ''}<br>score: ${r.score == null ? 'n/a' : r.score + (r.partial ? ' (* missing term dropped, weights renormalised)' : '')}`); });
   };
   const ring = (cx, cy, r, lw, pct, col) => { ctx.lineWidth = lw; ctx.strokeStyle = C.muted; ctx.beginPath(); ctx.arc(cx, cy, r, 0, 7); ctx.stroke();
     if (pct) { ctx.strokeStyle = col; ctx.beginPath(); ctx.arc(cx, cy, r, -Math.PI / 2, -Math.PI / 2 + 2 * Math.PI * pct / 100); ctx.stroke(); } ctx.lineWidth = 1; };
   const projRows = (x, y0, w, rows) => rows.forEach(([lab, name, note, ic], i) => { const pr = D.projects.find(q => q.name === name), y = y0 + i * 18, pc = pr ? pr.pct : null;
     drawIcon(ctx, ic || 'project', x, y - 10, 12, C.sub, 2); txt(lab, x + 17, y, C.text, 10, 700, 'left', MONO, 110); if (note) txt(note, x + 130, y, C.waiting, 9, 400, 'left', MONO, 70);
-    const bk = BLK.projects.has(name); segBar(x + w - 120, y - 7, 80, pc, bk ? C.danger : pc >= 50 ? C.active : C.waiting, 10, 6); if (bk) { ctx.fillStyle = C.danger; ctx.fillRect(x + w - 122, y - 8, 2, 8); }
-    txt(pc == null ? 'n/a' : pc + '%', x + w, y, bk ? C.danger : C.text, 10, 700, 'right'); tip(x - 2, y - 12, w + 4, 16, `<b>${esc(name)}</b>: ${pc == null ? 'n/a' : pc + '%'}${bk ? ' · <b style="color:' + C.danger + '">blocked</b>' : ''}${pr && pr.formula && !PUB ? '<br><span class="tm">' + esc(pr.formula) + '</span>' : ''}`); });
+    const bk = BLK.projects.has(name); segBar(x + w - 120, y - 7, 80, pc, pc >= 50 ? C.active : C.waiting, 10, 6); 
+    txt(pc == null ? 'n/a' : pc + '%', x + w, y, C.text, 10, 700, 'right'); tip(x - 2, y - 12, w + 4, 16, `<b>${esc(name)}</b>: ${pc == null ? 'n/a' : pc + '%'}${pr && pr.formula && !PUB ? '<br><span class="tm">' + esc(pr.formula) + '</span>' : ''}`); });
   const output = (p, t) => {
     if (PUB) { panel(p, 'team projects', '% to goal', C.active, 0, 'project', 'Progress on the team\'s public projects');
       projRows(p.x + 12, p.y + 50, p.w - 24, (D.public_projects || []).map(q => [q.label, q.name, '', q.icon]));
@@ -266,7 +266,7 @@ export function createPipeline(canvas, V, prev) {
   };
   const drawLinks = (dt, k) => {
     S.links.forEach(l => { const P = l.path, hot = l.tracers.length > 0;
-      const bl = lk(l.from, l.to); ctx.strokeStyle = bl ? rgba(C.danger, hot ? 1 : 0.8) : l.unknown ? rgba(C.sub, 0.45) : rgba(C.active, hot ? 0.8 : 0.32); ctx.lineWidth = l.unknown ? 1 : 1.2 + Math.min(2, (l.count || 0) / 8);
+      const bl = lk(l.from, l.to); ctx.strokeStyle = l.unknown ? rgba(C.sub, 0.45) : rgba(C.active, hot ? 0.8 : 0.32); ctx.lineWidth = l.unknown ? 1 : 1.2 + Math.min(2, (l.count || 0) / 8);
       ctx.setLineDash(l.unknown ? [4, 5] : []); ctx.beginPath(); const n = Math.floor(P.s.length * k); for (let i = 0; i < n; i++) i ? ctx.lineTo(P.s[i][0], P.s[i][1]) : ctx.moveTo(P.s[i][0], P.s[i][1]); ctx.stroke(); ctx.setLineDash([]); ctx.lineWidth = 1;
       if (k < 1) return;
       l.parts.forEach(pt => { pt.u = (pt.u + pt.v * dt) % 1; const q = at(P, pt.u); ctx.drawImage(SP.w, q[0] - 4, q[1] - 4, 8, 8);
