@@ -1,0 +1,1 @@
+Fonts: Inter, JetBrains Mono (SIL OFL 1.1, see fonts/). three.js (MIT, vendor/three-LICENSE). Lucide icons (ISC, vendor/lucide-LICENSE).

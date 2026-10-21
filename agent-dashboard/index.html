@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>502ai · Agent dashboard (live team activity)</title><meta name="description" content="Public, censored view of the 502ai agent team: activity, flows, step chains and leaderboard."><meta name="robots" content="noindex"><meta name="theme-color" content="#0b1424">
+<link rel="icon" href="favicon.svg"><link rel="stylesheet" href="style.css"></head>
+<body>
+<header id="top">
+  <div id="crumbs"><span class="brand">502<em>ai</em></span><span class="sep">/</span><span>502ai</span><span class="sep">/</span><span>agent dashboard</span><span class="sep">·</span><span class="pubnote" title="Public censored snapshot. Client, lead and business names, contacts, hosts, IDs, file locations, code references and message details are removed.">public · censored</span></div>
+  <span id="mode" hidden></span><div id="live" title="Live status"><span class="ld"></span><span id="livetx">connecting…</span></div>
+  <div id="metrics"></div>
+  <div id="toggle"><button data-s="a" class="on" title="Dashboard (D)" data-ic="dashboard"></button><button data-s="b" title="Network view (N)" data-ic="network"><kbd>N</kbd></button><button id="lgbtn" title="Agent colours legend (G)" data-ic="legend"></button><button id="theme" title="Switch to light mode (L)"></button><button id="pause" style="display:none" title="Pause/play rotation (Space)">❚❚ pause rotation</button></div>
+</header>
+<nav id="roll"></nav>
+<section id="gate">
+  <div id="gwait" class="half"><span class="hd" title="Decisions pending the owner (details private)" data-ic="hourglass"><b class="badge" id="wcount">0</b></span><div class="chips" id="wchips"></div></div>
+  <div id="gblk" class="half"><button class="hd" data-tab="blockers" title="Blockers" data-ic="alert"><b class="badge" id="bcount">0</b></button><div class="chips" id="bchips"></div></div>
+</section>
+<main id="stage">
+  <canvas id="pipe" class="scene"></canvas>
+  <div id="nebwrap" class="scene"><canvas id="neb"></canvas><div id="labels"></div>
+    <div id="nebhud"><div class="h">team nebula</div><div class="s">ceo core · agent hubs · tracers = replayed real events · dashed = unknown count</div><div id="nebev"></div></div></div>
+  <aside id="legend" hidden></aside>
+  <aside id="drawer" hidden>
+    <div class="tabs"><button data-tab="blockers">blockers</button><button data-tab="sources">sources</button><button id="dclose" title="Close (Esc)">×</button></div>
+    <div id="dbody"></div>
+  </aside>
+  </main>
+<div id="tip" hidden></div>
+<footer id="bottom">
+  <div id="ticker"></div>
+  <div id="foot"></div>
+</footer>
+<script>window.DASH_PUBLIC = true;</script>
+<script src="data.js"></script>
+<script type="module" src="app.js"></script>
+</body></html>
