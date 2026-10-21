@@ -35,8 +35,7 @@ export const isSub = id => !!SUB_STATIC[id];
 const tv = o => (o ? o[THEME === 'light' ? 'light' : 'dark'] : null);
 export const hue = id => tv(HUES[id]) || tv(HUES[parentOf(id)]) || C.sub;
 export const accent = id => { const [a, g] = accentIx(id); return { color: tv(ACCENTS[a]), name: ACCENTS[a].name, glyph: GLYPHS[g], ix: a }; };
-export const STATUS_RING = (tag, blocked) => blocked || tag === 'unresp' ? { color: C.danger, style: 'solid', width: 3, pulse: true, label: blocked ? 'blocked' : 'unresponsive' }
-  : tag === 'waiting' || tag === 'human' ? { color: C.waiting, style: 'dashed', width: 2, label: 'waiting on damon' }
+export const STATUS_RING = (tag, blocked) => tag === 'waiting' || tag === 'human' ? { color: C.waiting, style: 'dashed', width: 2, label: 'waiting on damon' }
   : tag === 'pending' ? { color: C.sub, style: 'dashed', width: 1.5, label: 'pending setup' }
   : tag === 'idle' ? { color: C.dim, style: 'dotted', width: 1.5, label: 'idle' }
   : { color: C.sub, style: 'solid', width: 1, alpha: 0.55, label: 'active' };

@@ -12,7 +12,7 @@
 <nav id="roll"></nav>
 <section id="gate">
   <div id="gwait" class="half"><span class="hd" title="Decisions pending the owner (details private)" data-ic="hourglass"><b class="badge" id="wcount">0</b></span><div class="chips" id="wchips"></div></div>
-  <div id="gblk" class="half"><button class="hd" data-tab="blockers" title="Blockers" data-ic="alert"><b class="badge" id="bcount">0</b></button><div class="chips" id="bchips"></div></div>
+  <div style="display:none"><b id="bcount"></b><div id="bchips"></div></div>
 </section>
 <main id="stage">
   <canvas id="pipe" class="scene"></canvas>
@@ -20,7 +20,7 @@
     <div id="nebhud"><div class="h">team nebula</div><div class="s">ceo core · agent hubs · tracers = replayed real events · dashed = unknown count</div><div id="nebev"></div></div></div>
   <aside id="legend" hidden></aside>
   <aside id="drawer" hidden>
-    <div class="tabs"><button data-tab="blockers">blockers</button><button data-tab="sources">sources</button><button id="dclose" title="Close (Esc)">×</button></div>
+    <div class="tabs"><button data-tab="sources">sources</button><button id="dclose" title="Close (Esc)">×</button></div>
     <div id="dbody"></div>
   </aside>
   </main>

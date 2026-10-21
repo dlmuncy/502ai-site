@@ -68,7 +68,7 @@ export function createNebula(canvas, labelLayer, V) {
   const fire = (f, t) => { const l = links.find(x => x.f === f && x.t === t) || links.find(x => x.f === t && x.t === f); if (!l) return; const rev = l.f !== f;
     const s = []; for (let k = 0; k < 8; k++) { const sp = new THREE.Sprite(trMat.clone()); sp.material.color.set(nodes[f]?.sub ? (nodes[f].sub.known ? hue(nodes[f].sub.parent) : C.sub) : hue(f)); sp.material.opacity = 1 - k / 8; sp.scale.set(34 - k * 3, 34 - k * 3, 1); scene.add(sp); s.push(sp); }
     l.tracers.push({ u: 0, s, rev }); l.line.material.opacity = Math.min(0.9, l.line.material.opacity + 0.4); };
-  const stateWords = { task_assigned: 'queued', checkin: 'reading', a2a_message: 'messaging', deliverable: 'done', verified: 'done', blocker: 'blocked', report: 'writing', activity: 'working' };
+  const stateWords = { task_assigned: 'queued', checkin: 'reading', a2a_message: 'messaging', deliverable: 'done', verified: 'done', report: 'writing', activity: 'working' };
   const lastEv = {};
   let w = 1, h = 1, born = 0, rotT = 0;
   const mats = new Set([trMat]); scene.traverse(o => { if (o.material && o.material.color) mats.add(o.material); });
