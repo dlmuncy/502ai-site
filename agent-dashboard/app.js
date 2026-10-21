@@ -17,7 +17,7 @@ const V = {}; const build = () => { const now = V.now || 0; const src = LIVE?.vp
 build();
 const Q = new URLSearchParams(location.search);
 const pin = Q.get('scene'); const skip = parseFloat(Q.get('t') || '0');
-const EV_EVERY = 1.6;
+const EV_EVERY = matchMedia('(prefers-reduced-motion: reduce)').matches ? 3.2 : 1.6;
 const $ = s => document.querySelector(s);
 document.querySelectorAll('[data-ic]').forEach(b => b.insertAdjacentHTML('afterbegin', svg(b.dataset.ic, b.classList.contains('hd') ? 15 : 14)));
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
@@ -32,24 +32,6 @@ let shownM = metricVals();
 $('#metrics').innerHTML = shownM.map(([ic, k, v, c], i) => `<div class="m" title="${k}"><span class="k">${svg(ic, 14)}</span><span class="v ${c}" id="mv${i}"></span></div>`).join('');
 const runMetrics = () => shownM.forEach(([, , v], i) => odo($('#mv' + i), v));
 const updMetrics = () => { const nm = metricVals(); nm.forEach(([, , v], i) => { if (String(v) !== String(shownM[i][2])) { const el = $('#mv' + i); odo(el, v); el.classList.remove('chg'); void el.offsetWidth; el.classList.add('chg'); } }); shownM = nm; };
-const ROLL = ['ceo', 'reed', 'evelyn', 'dutchess', 'skill_finder', 'up_skiller', 'viv', 'agent_builder', 'friend', 'motion', 'product_manager'].filter(id => V.A[id]);
-const rollName = id => id === 'product_manager' ? 'PM' : id === 'dutchess' ? 'Duch.' : id === 'skill_finder' ? 'Finder' : id === 'up_skiller' ? 'Up-Skiller' : id === 'agent_builder' ? 'Builder' : id === 'viv' ? 'Viv' : id === 'dutchess' ? 'Dutchess' : V.A[id].name;
-document.documentElement.style.setProperty('--rolln', ROLL.length);
-$('#roll').innerHTML = ROLL.map(id => `<div class="rc" id="rc-${id}" title="${esc(V.A[id].name)} · ${esc(V.A[id].role)}"><div class="ic">${svg(AICON[id], 16)}<span class="dot"></span></div>
-  <div class="tx"><div class="n">${rollName(id)}<span class="la"></span></div><div class="l"></div></div><div class="meter">${'<b></b>'.repeat(8)}</div></div>`).join('');
-const paintRoll = () => ROLL.forEach(id => { const a = V.A[id], T = TAG[a.tag], el = $('#rc-' + id), nb = V.blk.agents.get(id) || 0;
-  const ic = el.querySelector('.ic'); ic.style.color = hue(id); ic.style.borderColor = hue(id);
-  let bd = ic.querySelector('.acc'); if (isSub(id)) { const a = accent(id); if (!bd) { bd = document.createElement('i'); bd.className = 'acc'; ic.append(bd); } bd.textContent = a.glyph; bd.style.color = a.color; bd.style.borderColor = a.color; } const d = el.querySelector('.dot'); d.style.background = nb ? C.sub : T.color; d.style.boxShadow = `0 0 8px ${nb ? C.sub : T.color}`;
-  el.querySelector('.la').textContent = a.last_active ? fmtET(a.last_active).slice(6) : '?';
-  const l = el.querySelector('.l'); l.style.color = T.color; const SI = V.I.steps[id]; const cs = SI && SI.current ? STEPS.find(x => x.id === SI.current) : null; el.title = `${a.name} · ${T.label}${cs ? ' · current step: ' + cs.label : ''}`; l.innerHTML = (cs ? `<span class="cs">${svg(cs.icon, 11)} ${cs.label}</span>` : '<span class="cs na">no events</span>'); });
-let meters = {}, mMax = 1;
-const calcMeters = () => { const t0 = new Date(V.events[0].time).getTime(), t1 = new Date(V.events[V.events.length - 1].time).getTime();
-  meters = Object.fromEntries(ROLL.map(id => { const b = new Array(8).fill(0); V.perAgent(id).forEach(e => b[Math.min(7, Math.floor((new Date(e.time) - t0) / ((t1 - t0) / 8 + 1)))]++); return [id, b]; }));
-  mMax = Math.max(1, ...Object.values(meters).flat()); };
-const paintMeters = t => ROLL.forEach(id => { const bars = document.querySelectorAll(`#rc-${id} .meter b`); const p = document.getElementById('rc-' + id).classList.contains('pulse') ? 1.0 : 0;
-  bars.forEach((b, i) => { const v = meters[id][i] / mMax; b.style.height = Math.max(2, (v * 16) * (0.85 + 0.15 * Math.sin(t * 3 + i)) + p * 2) + 'px'; b.style.opacity = v ? 0.9 : 0.25; }); });
-const revealRoll = () => ROLL.forEach((id, i) => { const el = $('#rc-' + id); el.classList.remove('in'); setTimeout(() => el.classList.add('in'), 120 + i * 110); });
-paintRoll(); calcMeters();
 const STAGES = ['INTAKE', 'ROUTE', 'EXECUTE', 'QA', 'HUMAN GATE', 'OUTCOME'];
 const STGI = ['intake', 'route', 'build', 'qa', 'gate', 'deliver'];
 const chipH = (id, share) => id ? `<span class="lchip" style="--h:${hue(id)}" title="lead: ${esc(NAME[id] || id)}${share != null ? ' · ' + Math.round(share * 100) + '% of events' : ''}">${svg(AICON[id] || 'sparkles', 11, hue(id))}${share != null ? Math.round(share * 100) + '%' : ''}</span>` : '<span class="lchip na">n/a</span>';
@@ -74,16 +56,20 @@ const paintLive = () => { const el = $('#live'), tx = $('#livetx');
   else if (liveMode === 'snapshot') { el.className = 'stale'; tx.textContent = `SNAPSHOT · ${fmtET(V.D.generated_at)} et (no live server)`; }
   else { el.className = 'stale'; tx.textContent = 'connecting…'; } };
 const pipeCanvas = $('#pipe'), nebWrap = $('#nebwrap');
-let A = createPipeline(pipeCanvas, V);
-let B = null; try { B = createNebula($('#neb'), $('#labels'), V); } catch (err) { console.warn('webgl unavailable, nebula disabled', err); }
-function rethemeScenes() { A = createPipeline(pipeCanvas, V, A.state); B?.setTheme?.(); paintRoll(); paintGate(); paintDrawer(); paintLegend(); }
+const MQ = matchMedia('(max-width: 999px)'), RM = matchMedia('(prefers-reduced-motion: reduce)');
+const layoutFor = () => { if (!MQ.matches) return null; const w = document.documentElement.clientWidth || innerWidth; return { mobile: true, ww: w <= 480 ? Math.min(270, w / 1.4) : w / 1.4 }; };
+let LY = layoutFor();
+let A = createPipeline(pipeCanvas, V, null, LY);
+let B = null; try { B = createNebula($('#neb'), $('#labels'), V, { lite: Math.min(screen.width, screen.height) < 700 || MQ.matches }); } catch (err) { console.warn('webgl unavailable, nebula disabled', err); }
+function rethemeScenes() { A = createPipeline(pipeCanvas, V, A.state, LY); B?.setTheme?.(); paintGate(); paintDrawer(); paintLegend(); }
 let cur = null, sceneT = -10, revealed = false;
 const btns = document.querySelectorAll('#toggle button[data-s]');
 const show = s => { if (s === 'b' && !B) s = 'a'; if (s === cur) return; cur = s; sceneT = V.now;
   pipeCanvas.style.opacity = s === 'a' ? 1 : 0; nebWrap.style.opacity = s === 'b' ? 1 : 0; nebWrap.style.pointerEvents = s === 'b' ? 'auto' : 'none'; pipeCanvas.style.pointerEvents = s === 'a' ? 'auto' : 'none';
   $('#pause').style.display = s === 'b' ? '' : 'none'; btns.forEach(x => x.classList.toggle('on', x.dataset.s === s));
   (s === 'a' ? A : B)?.enter(V.now);
-  if (!revealed) { revealed = true; revealRoll(); runMetrics(); }
+  if (!revealed) { revealed = true; runMetrics(); }
+  if (LY) { resize(); if (s === 'b') scrollTo({ top: stageEl.offsetTop, behavior: RM.matches ? 'auto' : 'smooth' }); }
   const u = new URL(location); if (s === 'b') u.searchParams.set('scene', 'b'); else u.searchParams.delete('scene'); history.replaceState(null, '', u); };
 btns.forEach(b => b.onclick = () => show(b.dataset.s));
 const typing = e => /INPUT|TEXTAREA|SELECT/.test(e.target.tagName);
@@ -94,14 +80,19 @@ addEventListener('keydown', e => { if (typing(e)) { if (e.key === 'Escape') { cl
   if (k === 'n') show(cur === 'b' ? 'a' : 'b'); if (k === 'd' || k === 'escape') show('a'); if ((k === ' ' || k === 'p') && cur === 'b') { e.preventDefault(); togglePause(); } });
 const togglePause = () => { if (!B) return; B.paused = !B.paused; $('#pause').innerHTML = B.paused ? svg('play', 13) : svg('pause', 13); };
 $('#pause').onclick = togglePause;
-let vw = 0, vh = 0; const resize = () => { const r = $('#stage').getBoundingClientRect(); vw = r.width; vh = r.height; const d = devicePixelRatio || 1;
-  pipeCanvas.width = vw * d; pipeCanvas.height = vh * d; B?.resize(vw, vh); };
-addEventListener('resize', resize); resize();
+const stageEl = $('#stage');
+function sizeStage() { document.documentElement.classList.toggle('mob', !!LY); document.documentElement.classList.toggle('mob-b', !!LY && cur === 'b');
+  stageEl.style.height = LY ? (cur === 'b' ? '' : Math.ceil(A.worldH * (vw / A.worldW)) + 'px') : ''; }
+let vw = 0, vh = 0; const resize = () => { const nl = layoutFor(); if (JSON.stringify(nl) !== JSON.stringify(LY)) { LY = nl; A = createPipeline(pipeCanvas, V, A.state, LY); }
+  const r = stageEl.getBoundingClientRect(); vw = r.width; if (LY) { vw = document.documentElement.clientWidth; sizeStage(); }
+  const c = pipeCanvas.getBoundingClientRect(); vh = LY ? c.height : r.height; const d = Math.min(2, devicePixelRatio || 1);
+  pipeCanvas.width = Math.round(vw * d); pipeCanvas.height = Math.round(vh * d); if (B) { const n = $('#nebwrap').getBoundingClientRect(); B.resize(n.width || vw, n.height || vh); } };
+addEventListener('resize', resize); addEventListener('orientationchange', () => setTimeout(resize, 250)); resize();
+const pipeScroll = () => LY ? Math.max(0, pipeCanvas.getBoundingClientRect().top - stageEl.getBoundingClientRect().top) : 0;
 let ei = 0, nextEv = 0.8; const freshQ = [];
 const fireEvent = e => { A.event(e); B?.event(e);
   STAGES.forEach((_, i) => $('#stg' + i).classList.toggle('live', i === e.stage));
   const fl = A.flowLead(e); $('#tev').innerHTML = `${e.fresh ? '<b class="nw">NEW</b> ' : ''}${fmtET(e.time)} ${V.A[e.agent] ? svg(AICON[e.agent], 12, hue(e.agent)) : esc(e.agent)} ${fl ? `<span class="fl" title="flow lead (most events on this route)">${svg('route', 11)} ${chipH(fl.lead?.id, fl.lead?.share)}</span>` : ''} ${esc(e.summary.replace(/^#[\w-]+: /, '').toLowerCase())}`;
-  new Set([e.agent, ...e.route.flat()]).forEach(id => { const el = document.getElementById('rc-' + id); if (el) { el.classList.add('pulse'); setTimeout(() => el.classList.remove('pulse'), 900); } });
   const ne = $('#nebev'); if (ne) ne.textContent = '> ' + e.agent + ' · ' + e.summary.toLowerCase().slice(0, 110); };
 const nextReplay = () => { const e = V.events[ei % V.events.length]; ei++; return e; };
 if (skip > 0) { const n = Math.floor(skip / EV_EVERY); for (let i = 0; i < n; i++) nextReplay(); }
@@ -148,18 +139,26 @@ const toggleLegend = () => { const el = $('#legend'); el.hidden = !el.hidden; $(
 $('#lgbtn').onclick = toggleLegend;
 const closeAssign = () => {}; const idleAt = () => null;
 const tipEl = $('#tip');
-pipeCanvas.addEventListener('mousemove', ev => { pipeCanvas.classList.toggle('hand', !PUB && !!idleAt(ev)); const r = pipeCanvas.getBoundingClientRect(); const h = A.tipAt(ev.clientX - r.left, ev.clientY - r.top);
-  if (!h) { tipEl.hidden = true; return; } tipEl.innerHTML = h; tipEl.hidden = false; const tw = tipEl.offsetWidth, th = tipEl.offsetHeight; tipEl.style.left = Math.min(innerWidth - tw - 8, ev.clientX + 14) + 'px'; tipEl.style.top = (ev.clientY + 16 + th > innerHeight ? ev.clientY - th - 10 : ev.clientY + 16) + 'px'; });
-pipeCanvas.addEventListener('mouseleave', () => tipEl.hidden = true);
+const showTip = (h, cx, cy) => { if (!h) { tipEl.hidden = true; return; } tipEl.innerHTML = h; tipEl.hidden = false; const tw = tipEl.offsetWidth, th = tipEl.offsetHeight;
+  tipEl.style.left = Math.max(8, Math.min(innerWidth - tw - 8, cx + 14)) + 'px'; tipEl.style.top = Math.max(8, cy + 16 + th > innerHeight ? cy - th - 10 : cy + 16) + 'px'; };
+const canvasTip = ev => { const r = pipeCanvas.getBoundingClientRect(); return A.tipAt(ev.clientX - r.left, ev.clientY - r.top); };
+pipeCanvas.addEventListener('pointermove', ev => { if (ev.pointerType !== 'mouse') return; pipeCanvas.classList.toggle('hand', !PUB && !!idleAt(ev)); showTip(canvasTip(ev), ev.clientX, ev.clientY); });
+pipeCanvas.addEventListener('pointerleave', ev => { if (ev.pointerType === 'mouse') tipEl.hidden = true; });
+let tipFrom = null;
+pipeCanvas.addEventListener('click', ev => { const id = PUB ? null : idleAt(ev); if (id) { tipEl.hidden = true; openAssign(id); return; }
+  if (ev.pointerType === 'touch' || ev.pointerType === 'pen') { const h = canvasTip(ev); if (h && !(tipFrom === h && !tipEl.hidden)) { showTip(h, ev.clientX, ev.clientY); tipFrom = h; } else { tipEl.hidden = true; tipFrom = null; } } });
+document.addEventListener('click', ev => { const t = ev.target.closest('.m,.stg,.lchip,.fs,#mode,#live,#gwait span.hd,#nebhud'); if (ev.target === pipeCanvas) return;
+  const tch = ev.pointerType === 'touch' || ev.pointerType === 'pen'; if (t && tch && t.title) { showTip(esc(t.title), ev.clientX, ev.clientY); tipFrom = t; return; } if (tch) { tipEl.hidden = true; tipFrom = null; } }, true);
+addEventListener('scroll', () => { if (tipFrom) { tipEl.hidden = true; tipFrom = null; } }, { passive: true });
 
 const evKey = e => e.time + '|' + e.agent + '|' + e.summary.slice(0, 80);
 const refresh = (force) => { const sig = BASE.generated_at + '|' + JSON.stringify(LIVE?.vps || null).length + '|' + (LIVE?.vps_status?.last_ok_at || '') + '|' + JSON.stringify(LIVE?.outbox?.items || []);
   if (!force && sig === lastSig) return; lastSig = sig;
   const oldKeys = new Set(V.events.map(evKey)), oldLA = Object.fromEntries(Object.entries(V.A).map(([k, a]) => [k, a.last_active]));
-  const wasLive = V.hubLive; build(); A = createPipeline(pipeCanvas, V, A.state);
+  const wasLive = V.hubLive; build(); A = createPipeline(pipeCanvas, V, A.state, LY); if (LY) sizeStage();
   if (wasLive) V.events.filter(e => !oldKeys.has(evKey(e))).forEach(e => { e.fresh = true; freshQ.push(e); });   // first live merge = catch-up, not 'new'
   Object.keys(V.A).forEach(k => { if (V.A[k].last_active !== oldLA[k]) A.state.flash[k] = 1; });
-  updMetrics(); paintRoll(); calcMeters(); paintTicker(); paintGate(); paintDrawer(); paintFoot(); paintMode(); paintLegend(); };
+  updMetrics(); paintTicker(); paintGate(); paintDrawer(); paintFoot(); paintMode(); paintLegend(); };
 const poll = async () => {
   try { const r = await fetch('data.json?ts=' + Date.now(), { cache: 'no-store' }); if (r.ok) { const d = await r.json(); if (d && d.agents) BASE = d; } } catch { }
   if (PUB) { liveMode = 'public'; refresh(); paintLive(); return; }
@@ -173,8 +172,8 @@ const loop = () => { const now = performance.now() / 1000; const dt = Math.min(0
   if (!started) { started = true; show(pin === 'b' ? 'b' : 'a'); }
   if (V.now > nextEv) { nextEv = V.now + (freshQ.length ? 0.7 : EV_EVERY); fireEvent(freshQ.length ? freshQ.shift() : nextReplay()); }
   const fading = V.now - sceneT < 0.9;
-  if (cur === 'a' || fading) A.frame(V.now, dt, vw, vh);
+  if (cur === 'a' || fading) A.frame(V.now, dt, vw, vh, pipeScroll());
   if (B && (cur === 'b' || fading)) B.frame(V.now, dt);
-  paintMeters(V.now); requestAnimationFrame(loop); };
+  requestAnimationFrame(loop); };
 document.fonts.ready.then(() => requestAnimationFrame(loop));
-window.__dash = { V, show, poll, get liveMode() { return liveMode; } };
+window.__dash = { V, show, poll, get liveMode() { return liveMode; }, get A() { return A; } };
