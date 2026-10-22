@@ -21,7 +21,7 @@ const EV_EVERY = matchMedia('(prefers-reduced-motion: reduce)').matches ? 3.2 : 
 const $ = s => document.querySelector(s);
 document.querySelectorAll('[data-ic]').forEach(b => b.insertAdjacentHTML('afterbegin', svg(b.dataset.ic, b.classList.contains('hd') ? 15 : 14)));
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
-const NAME = { skill_finder: 'Skill-Finder', up_skiller: 'Up-Skiller', ceo: 'CEO', reed: 'Reed', evelyn: 'Evelyn', dutchess: 'Dutchess', viv: 'Viv', agent_builder: 'Agent Builder', friend: 'Friend', motion: 'Motion', product_manager: 'Product Manager', damon: 'Damon' };
+const NAME = { skill_finder: 'Skill-Finder', up_skiller: 'Up-Skiller', ceo: 'CEO', reed: 'Reed', evelyn: 'Evelyn', dutchess: 'Dutchess', viv: 'Viv', agent_builder: 'Agent Builder', friend: 'Friend', motion: 'Motion', product_manager: 'Product Manager', cto: 'CTO', damon: 'Damon' };
 
 const odo = (el, str) => { el.innerHTML = ''; [...String(str)].forEach((ch, i) => { if (!/\d/.test(ch)) { el.append(ch); return; }
   const o = document.createElement('span'); o.className = 'odo'; const col = document.createElement('span'); col.innerHTML = Array.from({ length: 10 }, (_, d) => `<i>${d}</i>`).join('');
