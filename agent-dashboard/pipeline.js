@@ -3,7 +3,7 @@ import { hue, accent, isSub, subAgents, STATUS_RING } from './identity.js';
 import { fmtET } from './derive.js';
 import { drawIcon } from './icons.js';
 import { STEPS, FORMULAS, stepOf } from './insights.js';
-export const W = 1600, H = 840;
+export const W = 1760, H = 840;
 const PUB = typeof window !== 'undefined' && !!window.DASH_PUBLIC;
 const ease = t => t < 0 ? 0 : t > 1 ? 1 : t * t * (3 - 2 * t);
 export const AICON = { ceo: 'ceo', reed: 'reed', evelyn: 'evelyn', dutchess: 'dutchess', viv: 'viv', motion: 'motion', friend: 'friend', agent_builder: 'agent_builder', skill_finder: 'skill_finder', up_skiller: 'up_skiller', product_manager: 'product_manager', cto: 'cto', damon: 'damon' };
@@ -38,11 +38,11 @@ export function createPipeline(canvas, V, prev, LY) {
   P('damon', 10, 10, 240, 160, 'input', 0); P('drive', 10, 180, 240, 118, 'input', 1);
   P(IN3, 10, 308, 240, 118, 'input', 2); P('hub', 10, 436, 240, 112, 'input', 3);
   P('ceo', 290, 10, 100, 538, 'ceo', 4);
-  const GX = 430, GAP = 12, CW = (1160 - 5 * GAP) / 6, RH = 258;
-  const grid = [['reed', 'evelyn', 'dutchess', 'skill_finder', 'up_skiller', 'viv'], ['brain', 'agent_builder', 'friend', 'motion', 'product_manager', 'streams']];
-  grid.forEach((row, r) => row.forEach((id, c) => { if (id !== 'brain' && id !== 'streams' && !V.A[id]) return; P(id, GX + c * (CW + GAP), 10 + r * (RH + 22), CW, RH, id === 'brain' || id === 'streams' ? 'widget' : 'agent', 5 + r * 6 + c); }));
-  P('runlog', 10, 566, 470, 264, 'bottom', 17); P('spectro', 490, 566, 390, 264, 'widget', 18);
-  P('board', 890, 566, 340, 264, 'bottom', 19); P('output', 1240, 566, 350, 264, 'bottom', 20);
+  const GX = 430, GAP = 12, CW = (1320 - 6 * GAP) / 7, RH = 258;
+  const grid = [['reed', 'evelyn', 'dutchess', 'skill_finder', 'up_skiller', 'viv', 'brain'], ['agent_builder', 'friend', 'motion', 'product_manager', 'cto', 'streams']];
+  grid.forEach((row, r) => row.forEach((id, c) => { if (id !== 'brain' && id !== 'streams' && !V.A[id]) return; const span = id === 'streams' ? 2 : 1; P(id, GX + c * (CW + GAP), 10 + r * (RH + 22), CW * span + GAP * (span - 1), RH, id === 'brain' || id === 'streams' ? 'widget' : 'agent', 5 + r * 7 + c); }));
+  P('runlog', 10, 566, 520, 264, 'bottom', 19); P('spectro', 540, 566, 430, 264, 'widget', 20);
+  P('board', 980, 566, 380, 264, 'bottom', 21); P('output', 1370, 566, 380, 264, 'bottom', 22);
   }
   const LANE = 10 + 258 + 11;
   const BUS = 557;

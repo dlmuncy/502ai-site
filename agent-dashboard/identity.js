@@ -2,24 +2,24 @@ import { C, THEME } from './palette.js';
 
 export const TOP = ['ceo', 'reed', 'evelyn', 'dutchess', 'viv', 'motion', 'friend', 'agent_builder', 'product_manager', 'cto'];
 export const HUES = {
-  ceo:           { name: 'CEO',           dark: '#6ea8ff', light: '#185abc', family: 'blue (Google blue 800)' },
+  ceo:           { name: 'CEO',           dark: '#6ea8ff', light: '#1a5fd0', family: 'blue (Google blue 800)' },
   reed:          { name: 'Reed',          dark: '#34d6f0', light: '#007b83', family: 'cyan / teal (Google cyan 900)' },
   evelyn:        { name: 'Evelyn',        dark: '#5ee08a', light: '#188038', family: 'green (Google green 700)' },
-  dutchess:      { name: 'Dutchess',      dark: '#c4a1ff', light: '#8430ce', family: 'violet (Google purple 700)' },
+  dutchess:      { name: 'Dutchess',      dark: '#c4a1ff', light: '#7c3aed', family: 'violet (Google purple 700)' },
   viv:           { name: 'Viv',           dark: '#ff7ac6', light: '#c5197d', family: 'magenta (Google pink 700)' },
-  motion:        { name: 'Motion',        dark: '#ff9a52', light: '#b5410b', family: 'orange (Microsoft orange, darkened)' },
+  motion:        { name: 'Motion',        dark: '#ffad5c', light: '#b35c00', family: 'amber-orange (hue 31, kept clear of red)' },
   friend:        { name: 'Friend',        dark: '#ffd84d', light: '#7a6400', family: 'yellow (Microsoft yellow, darkened)' },
   agent_builder: { name: 'Agent Builder', dark: '#c3cdd9', light: '#5b6670', family: 'silver / slate (Microsoft grey)' },
-  product_manager: { name: 'Product Manager', dark: '#e0a982', light: '#795548', family: 'brown / sienna (Material brown 500)' },
+  product_manager: { name: 'Product Manager', dark: '#e0b48a', light: '#875a2c', family: 'brown / caramel (hue 30)' },
   cto:           { name: 'CTO',           dark: '#b8e86a', light: '#4d7c0f', family: 'lime / olive (Tailwind lime 700)' },
-  damon:         { name: 'Damon (human)', dark: '#ffeecc', light: '#8f5300', family: 'cream / amber (human gate)' },
+  damon:         { name: 'Damon (human)', dark: '#ffeecc', light: '#9a5b00', family: 'cream / amber (human gate)' },
 };
 export const ACCENTS = [
   { name: 'white / ink', dark: '#ffffff', light: '#202124' },
   { name: 'mint / forest', dark: '#b9f6ca', light: '#1b5e20' },
   { name: 'ice / navy', dark: '#b3e5fc', light: '#0d47a1' },
   { name: 'lilac / plum', dark: '#e1bee7', light: '#6a1b9a' },
-  { name: 'peach / brown', dark: '#ffccbc', light: '#6d4c41' },
+  { name: 'peach / brown', dark: '#ffd6a5', light: '#6d4c41' },
   { name: 'lemon / olive', dark: '#fff59d', light: '#5d5d00' },
 ];
 export const GLYPHS = ['◆', '▲', '●', '■', '✚', '★'];

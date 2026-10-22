@@ -5,10 +5,10 @@ export const THEMES = {
     active: '#b7f34b', activeHi: '#e8f8c6', activeLo: '#5c7e19', activeDk: '#243514', waiting: '#ffeecc', success: '#00d294', danger: '#a7b7ca',
   },
   light: {
-    bg: '#f8f9fa', deep: '#f1f3f4', navy: '#ffffff', panel: '#ffffff', panelHd: '#f1f3f4', muted: '#e8eaed', border: '#dadce0',
-    grid: 'rgba(26,115,232,0.06)', text: '#202124', sub: '#3c4043', dim: '#5f6368',
-    active: '#1967d2', activeHi: '#174ea6', activeLo: '#8ab4f8', activeDk: '#e8f0fe',
-    waiting: '#8f5300', success: '#137333', danger: '#3c4043',
+    bg: '#f5f7fb', deep: '#eef2f8', navy: '#ffffff', panel: '#ffffff', panelHd: '#f3f6fa', muted: '#e8edf5', border: '#dde3ec',
+    grid: 'rgba(26,115,232,0.05)', text: '#1b1f24', sub: '#3d4552', dim: '#5d6878',
+    active: '#1a73e8', activeHi: '#0b57d0', activeLo: '#a8c7fa', activeDk: '#e8f0fe',
+    waiting: '#9a5b00', success: '#137333', danger: '#3c4043',
   },
 };
 export const ACCENT = { ceo: '#4285f4', reed: '#00a4ef', evelyn: '#34a853', dutchess: '#fbbc05', skill_finder: '#7fba00', up_skiller: '#fa7b17', viv: '#a142f4', agent_builder: '#737373', friend: '#24c1e0', motion: '#f538a0', damon: '#8f5300' };

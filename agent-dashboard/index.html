@@ -7,13 +7,20 @@
   <div id="crumbs"><span class="brand">502<em>ai</em></span><span class="sep">/</span><span>502ai</span><span class="sep">/</span><span>agent dashboard</span><span class="sep">·</span><span class="pubnote" title="Public censored snapshot. Client, lead and business names, contacts, hosts, IDs, file locations, code references and message details are removed.">public · censored</span></div>
   <span id="mode" hidden></span><div id="live" title="Live status"><span class="ld"></span><span id="livetx">connecting…</span></div>
   <div id="metrics"></div>
-  <div id="toggle"><button data-s="a" class="on" title="Dashboard (D)" data-ic="dashboard"></button><button data-s="b" title="Network view (N)" data-ic="network"><kbd>N</kbd></button><button id="lgbtn" title="Agent colours legend (G)" data-ic="legend"></button><button id="theme" title="Switch to light mode (L)"></button><button id="pause" style="display:none" title="Pause/play rotation (Space)">❚❚ pause rotation</button></div>
+  <div id="toggle"><button data-s="o" class="on" title="System map: explorable 3D org chart (O)" data-ic="system"><kbd>O</kbd></button><button data-s="a" title="Pipeline dashboard (D)" data-ic="dashboard"><kbd>D</kbd></button><button data-s="b" title="Network view (N)" data-ic="network"><kbd>N</kbd></button><button id="lgbtn" title="Agent colours legend (G)" data-ic="legend"></button><button id="theme" title="Switch to light mode (L)"></button><button id="pause" style="display:none" title="Pause/play rotation (Space)">❚❚ pause rotation</button></div>
 </header>
 <section id="gate">
   <div id="gwait" class="half"><span class="hd" title="Decisions pending the owner (details private)" data-ic="hourglass"><b class="badge" id="wcount">0</b></span><div class="chips" id="wchips"></div></div>
   <div style="display:none"><b id="bcount"></b><div id="bchips"></div></div>
 </section>
 <main id="stage">
+  <div id="orgwrap" class="scene"><canvas id="org"></canvas><div id="olabels"></div>
+    <aside id="feed" class="glass"><div class="rh"><span data-ic="radio"></span>live stream<span class="rs" title="Each card lights up when a real logged event replays and fades when it is done">replay of real events</span></div><div id="feedl"></div></aside>
+    <aside id="insp" class="glass"><div id="inspb"></div><div id="lbmini"></div></aside>
+    <div id="scrub" class="glass"><button id="tplay" title="Pause / play the replay (Space)"></button><button id="tspeed" title="Replay speed"></button><div id="track" title="Timeline of every loaded event, coloured by agent. Drag to scrub."><canvas id="trackc"></canvas><i id="thead"></i></div><span id="tclock"></span><button id="ttour" title="Guided tour (T)"></button><button id="treset" title="Reset view (R)"></button></div>
+    <div id="ocap" hidden></div>
+    <div id="mfab"></div><div id="mcard" hidden></div><div id="mleg" hidden></div><div id="mhint" aria-hidden="true"></div><span id="mlive" aria-hidden="true"></span>
+  </div>
   <canvas id="pipe" class="scene"></canvas>
   <div id="nebwrap" class="scene"><canvas id="neb"></canvas><div id="labels"></div>
     <div id="nebhud"><div class="h">team nebula</div><div class="s">ceo core · agent hubs · tracers = replayed real events · dashed = unknown count</div><div id="nebev"></div></div></div>
