@@ -3,7 +3,7 @@ import { C, THEME } from './palette.js';
 import { hue, accent, subAgents, STATUS_RING } from './identity.js';
 import { ICONS } from './icons.js';
 
-const STAFF_IDS = ['viv', 'friend', 'motion', 'agent_builder', 'product_manager', 'cto'];
+const STAFF_IDS = ['viv', 'friend', 'motion', 'agent_builder', 'product_manager', 'cto', 'cso'];
 const TEAM_IDS = ['reed', 'evelyn', 'dutchess', 'skill_finder', 'up_skiller'];
 const SUBS = new Set(['skill_finder', 'up_skiller']);
 const ICON_OF = { hub: 'hub', drive: 'drive' };

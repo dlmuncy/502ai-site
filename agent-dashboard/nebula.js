@@ -3,7 +3,7 @@ import { C, TAG, THEME, keyOf } from './palette.js';
 import { hue, accent, subAgents, STATUS_RING } from './identity.js';
 import { fmtET } from './derive.js';
 
-const HUE_IDS = new Set(['ceo', 'reed', 'evelyn', 'dutchess', 'viv', 'motion', 'friend', 'agent_builder', 'product_manager', 'cto', 'damon']);
+const HUE_IDS = new Set(['ceo', 'reed', 'evelyn', 'dutchess', 'viv', 'motion', 'friend', 'agent_builder', 'product_manager', 'cto', 'cso', 'damon']);
 export function createNebula(canvas, labelLayer, V, opt = {}) {
   const R = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
   R.setPixelRatio(Math.min(2, devicePixelRatio || 1)); R.setClearColor(C.deep);
@@ -29,7 +29,7 @@ export function createNebula(canvas, labelLayer, V, opt = {}) {
   const RT = { solid: ringTex('solid'), thick: ringTex('thick'), dashed: ringTex('dashed'), dotted: ringTex('dotted'), arc: ringTex('thick', 2.3) };
   const dynMats = [];
   const dyn = (mat, fn) => { mat.userData.dyn = true; dynMats.push([mat, fn]); return mat; };
-  const sat = ['reed', 'evelyn', 'dutchess', 'viv', 'agent_builder', 'friend', 'motion', 'product_manager', 'cto'].filter(id => V.A[id]);
+  const sat = ['reed', 'evelyn', 'dutchess', 'viv', 'agent_builder', 'friend', 'motion', 'product_manager', 'cto', 'cso'].filter(id => V.A[id]);
   const PUB = !!window.DASH_PUBLIC;
   const ext = [['damon', 'owner', 'human gate'], ['drive', 'drive', 'audit log'], ['hub', 'agent hq', 'hub']];
   const nodes = { ceo: { p: new THREE.Vector3(0, 0, 0), id: 'ceo' } };

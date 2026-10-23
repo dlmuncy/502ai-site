@@ -6,8 +6,8 @@ import { STEPS, FORMULAS, stepOf } from './insights.js';
 export const W = 1760, H = 840;
 const PUB = typeof window !== 'undefined' && !!window.DASH_PUBLIC;
 const ease = t => t < 0 ? 0 : t > 1 ? 1 : t * t * (3 - 2 * t);
-export const AICON = { ceo: 'ceo', reed: 'reed', evelyn: 'evelyn', dutchess: 'dutchess', viv: 'viv', motion: 'motion', friend: 'friend', agent_builder: 'agent_builder', skill_finder: 'skill_finder', up_skiller: 'up_skiller', product_manager: 'product_manager', cto: 'cto', damon: 'damon' };
-export const SHORT = { agent_builder: 'Builder', skill_finder: 'Finder', up_skiller: 'Up-Skiller', product_manager: 'PM', cto: 'CTO', dutchess: 'Dutchess', viv: 'Viv', ceo: 'CEO', damon: 'Damon' };
+export const AICON = { ceo: 'ceo', reed: 'reed', evelyn: 'evelyn', dutchess: 'dutchess', viv: 'viv', motion: 'motion', friend: 'friend', agent_builder: 'agent_builder', skill_finder: 'skill_finder', up_skiller: 'up_skiller', product_manager: 'product_manager', cto: 'cto', cso: 'cso', damon: 'damon' };
+export const SHORT = { agent_builder: 'Builder', skill_finder: 'Finder', up_skiller: 'Up-Skiller', product_manager: 'PM', cto: 'CTO', cso: 'CSO', dutchess: 'Dutchess', viv: 'Viv', ceo: 'CEO', damon: 'Damon' };
 const short = (id, A) => SHORT[id] || (A[id]?.name || id);
 const STG = ['intake', 'route', 'execute', 'QA', 'human gate', 'outcome'];
 const STGI = ['intake', 'route', 'build', 'qa', 'gate', 'deliver'];
@@ -29,7 +29,7 @@ export function createPipeline(canvas, V, prev, LY) {
     const place = (items, x0, colw, n) => { for (let i = 0; i < items.length; i += n) { const row = items.slice(i, i + n); const rh = Math.max(...row.map(r => r[1]));
       row.forEach(([id, h, kind], c) => P(id, x0 + c * (colw + 10), y, colw, h, kind, o++)); y += rh + 12; } };
     place([['damon', 160, 'input'], ['drive', 118, 'input'], [IN3, 118, 'input'], ['hub', 112, 'input']], RX, cw, cols);
-    place(['reed', 'evelyn', 'dutchess', 'skill_finder', 'up_skiller', 'viv', 'agent_builder', 'friend', 'motion', 'product_manager', 'cto'].filter(id => V.A[id]).map(id => [id, 258, 'agent']), RX, cw, cols);
+    place(['reed', 'evelyn', 'dutchess', 'skill_finder', 'up_skiller', 'viv', 'agent_builder', 'friend', 'motion', 'product_manager', 'cto', 'cso'].filter(id => V.A[id]).map(id => [id, 258, 'agent']), RX, cw, cols);
     P('ceo', M, M, 50, y - 12 - M, 'ceo', o++); y += 6;
     const FW = WW - 2 * M, wc = FW >= 2 * 270 + 10 ? 2 : 1, ww = (FW - (wc - 1) * 10) / wc;
     place([['brain', 258, 'widget'], ['streams', streamsH(), 'widget'], ['runlog', 264, 'bottom'], ['spectro', 264, 'widget'], ['board', boardH(ww), 'bottom'], ['output', 264, 'bottom']], M, ww, wc);
@@ -39,8 +39,8 @@ export function createPipeline(canvas, V, prev, LY) {
   P(IN3, 10, 308, 240, 118, 'input', 2); P('hub', 10, 436, 240, 112, 'input', 3);
   P('ceo', 290, 10, 100, 538, 'ceo', 4);
   const GX = 430, GAP = 12, CW = (1320 - 6 * GAP) / 7, RH = 258;
-  const grid = [['reed', 'evelyn', 'dutchess', 'skill_finder', 'up_skiller', 'viv', 'brain'], ['agent_builder', 'friend', 'motion', 'product_manager', 'cto', 'streams']];
-  grid.forEach((row, r) => row.forEach((id, c) => { if (id !== 'brain' && id !== 'streams' && !V.A[id]) return; const span = id === 'streams' ? 2 : 1; P(id, GX + c * (CW + GAP), 10 + r * (RH + 22), CW * span + GAP * (span - 1), RH, id === 'brain' || id === 'streams' ? 'widget' : 'agent', 5 + r * 7 + c); }));
+  const grid = [['reed', 'evelyn', 'dutchess', 'skill_finder', 'up_skiller', 'viv', 'brain'], ['agent_builder', 'friend', 'motion', 'product_manager', 'cto', ...(V.A.cso ? ['cso'] : []), 'streams']];
+  grid.forEach((row, r) => row.forEach((id, c) => { if (id !== 'brain' && id !== 'streams' && !V.A[id]) return; const span = id === 'streams' ? 7 - c : 1; P(id, GX + c * (CW + GAP), 10 + r * (RH + 22), CW * span + GAP * (span - 1), RH, id === 'brain' || id === 'streams' ? 'widget' : 'agent', 5 + r * 7 + c); }));
   P('runlog', 10, 566, 520, 264, 'bottom', 19); P('spectro', 540, 566, 430, 264, 'widget', 20);
   P('board', 980, 566, 380, 264, 'bottom', 21); P('output', 1370, 566, 380, 264, 'bottom', 22);
   }
@@ -206,7 +206,7 @@ export function createPipeline(canvas, V, prev, LY) {
     const drawKids = (par, px, py, rr, sz) => kids(par).forEach((s, j, arr) => { const a = t * 0.9 + j / arr.length * Math.PI * 2 + (par === 'ceo' ? 0.5 : 0); const kx = px + Math.cos(a) * rr, ky = py + Math.sin(a) * rr * 0.7;
       ctx.strokeStyle = rgba(s.hue, 0.6); ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(kx, ky); ctx.stroke(); orb(kx, ky, sz, s.id, { hue: s.hue, acc: s.accent }); });
     drawKids('ceo', cx, cy, 30, 2.6);
-    const sats = ['reed', 'evelyn', 'dutchess', 'viv', 'agent_builder', 'friend', 'motion', 'product_manager', 'cto'].filter(id => V.A[id]);
+    const sats = ['reed', 'evelyn', 'dutchess', 'viv', 'agent_builder', 'friend', 'motion', 'product_manager', 'cto', 'cso'].filter(id => V.A[id]);
     sats.forEach((id, i) => { const ang = t * 0.35 + i / sats.length * Math.PI * 2; const sx = cx + Math.cos(ang) * p.w * 0.38, sy = cy + Math.sin(ang) * 46 + 6; const ag = V.A[id], f = S.flash[id] || 0;
       ctx.globalAlpha = Math.sin(ang) > -0.2 ? 1 : 0.55; drawKids(id, sx, sy, 12, 1.6);
       orb(sx, sy, 3 + f * 2, id, { status: STATUS_RING(ag.tag, BLK.agents.get(id)) }); drawIcon(ctx, AICON[id], sx + 6, sy - 15, 10, hue(id), 2); });
@@ -221,7 +221,7 @@ export function createPipeline(canvas, V, prev, LY) {
     STG.forEach((sname, i) => { const L = I.streams.stages[i]; drawIcon(ctx, STGI[i], x, y - 9, 11, i === 4 ? C.waiting : C.sub, 2); txt(sname, x + 15, y, C.sub, 10, 400, 'left', MONO, 66);
       if (L?.id) { chip(L.id, x + 92, y - 3.5, 6.5); segBar(x + 102, y - 6, w - 104 - 30, L.share * 100, hue(L.id), 8, 5); txt(Math.round(L.share * 100) + '%', x + w, y, hue(L.id), 9, 700, 'right'); } else txt('n/a', x + w, y, C.dim, 9, 400, 'right');
       tip(x - 2, y - 11, w + 4, 15, leadTip(L, sname + ' stage')); y += 15; }); };
-  const ids8 = ['ceo', 'reed', 'evelyn', 'dutchess', 'skill_finder', 'up_skiller', 'viv', 'agent_builder', 'friend', 'motion', 'product_manager', 'cto'].filter(id => V.A[id]);
+  const ids8 = ['ceo', 'reed', 'evelyn', 'dutchess', 'skill_finder', 'up_skiller', 'viv', 'agent_builder', 'friend', 'motion', 'product_manager', 'cto', 'cso'].filter(id => V.A[id]);
   const t0 = new Date(V.events[0].time).getTime(), t1 = new Date(V.events[V.events.length - 1].time).getTime();
   const NB = 24, bw = (t1 - t0) / NB + 1;
   const SG = ids8.map(id => { const row = new Array(NB).fill(0); V.events.forEach(e => { if (e.agent === id || e.route.some(r => r.includes(id))) row[Math.min(NB - 1, Math.floor((new Date(e.time) - t0) / bw))]++; }); return row; });

@@ -22,7 +22,7 @@ const EV_EVERY = matchMedia('(prefers-reduced-motion: reduce)').matches ? 3.2 : 
 const $ = s => document.querySelector(s);
 document.querySelectorAll('[data-ic]').forEach(b => b.insertAdjacentHTML('afterbegin', svg(b.dataset.ic, b.classList.contains('hd') ? 15 : 14)));
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
-const NAME = { skill_finder: 'Skill-Finder', up_skiller: 'Up-Skiller', ceo: 'CEO', reed: 'Reed', evelyn: 'Evelyn', dutchess: 'Dutchess', viv: 'Viv', agent_builder: 'Agent Builder', friend: 'Friend', motion: 'Motion', product_manager: 'Product Manager', cto: 'CTO', damon: 'Damon' };
+const NAME = { skill_finder: 'Skill-Finder', up_skiller: 'Up-Skiller', ceo: 'CEO', reed: 'Reed', evelyn: 'Evelyn', dutchess: 'Dutchess', viv: 'Viv', agent_builder: 'Agent Builder', friend: 'Friend', motion: 'Motion', product_manager: 'Product Manager', cto: 'CTO', cso: 'CSO', damon: 'Damon' };
 
 const odo = (el, str) => { el.innerHTML = ''; [...String(str)].forEach((ch, i) => { if (!/\d/.test(ch)) { el.append(ch); return; }
   const o = document.createElement('span'); o.className = 'odo'; const col = document.createElement('span'); col.innerHTML = Array.from({ length: 10 }, (_, d) => `<i>${d}</i>`).join('');
@@ -232,7 +232,7 @@ const CAPS = {
   team: () => { const ids = ['reed', 'evelyn', 'dutchess'].filter(i => V.A[i]); const n = V.events.filter(e => ids.includes(e.agent)).length; const m = V.D.links.filter(l => ids.includes(l.from) && l.to === 'ceo').reduce((s, l) => s + (l.count || 0), 0);
     return [ids.map(i => svg(i, 15, hue(i))).join(''), 'VPS team · ' + ids.map(nm).join(', '), `${n} events · ${m} known messages back to the CEO`]; },
   skills: () => { const sf = V.A.skill_finder, us = V.A.up_skiller; return [svg('skill_finder', 15, hue('ceo')) + svg('up_skiller', 15, hue('ceo')), 'Skills loop · Skill-Finder vets, Up-Skiller installs', `${sf?.metrics?.runs ?? 'unknown'} finder runs · ${us?.metrics?.installed_last ?? 'unknown'} installed on the last run`]; },
-  staff: () => { const ids = ['viv', 'friend', 'motion', 'agent_builder', 'product_manager', 'cto'].filter(i => V.A[i]); const on = ids.filter(i => { const h = V.hrs(V.A[i]); return h != null && h <= 24; }).length;
+  staff: () => { const ids = ['viv', 'friend', 'motion', 'agent_builder', 'product_manager', 'cto', 'cso'].filter(i => V.A[i]); const on = ids.filter(i => { const h = V.hrs(V.A[i]); return h != null && h <= 24; }).length;
     return [ids.map(i => svg(i, 15, hue(i))).join(''), 'Staff ring · ' + ids.map(nm).join(', '), `${on} of ${ids.length} active in the last 24 h`]; },
   infra: () => [svg('hub', 15) + svg('drive', 15), 'Shared infrastructure', `${V.D.meta?.hub_posts ?? 'unknown'} hub posts across ${Object.keys(V.D.meta?.hub_channels || {}).length} channels · shared docs`],
 };

@@ -5,7 +5,7 @@ export const STEPS = [
   { id: 'qa', icon: 'qa', label: 'QA', tip: 'QA: QA, verify, test, check, audit, PASS' },
   { id: 'deliver', icon: 'deliver', label: 'deliver', tip: 'Deliver: deliverables, reports, done, posted, live' },
 ];
-export const AGENTS = ['ceo', 'reed', 'evelyn', 'dutchess', 'skill_finder', 'up_skiller', 'viv', 'agent_builder', 'friend', 'motion', 'product_manager', 'cto'];
+export const AGENTS = ['ceo', 'reed', 'evelyn', 'dutchess', 'skill_finder', 'up_skiller', 'viv', 'agent_builder', 'friend', 'motion', 'product_manager', 'cto', 'cso'];
 const low = e => ((e.summary || '') + ' ' + (e.outcome || '')).toLowerCase();
 export const stepOf = e => {
   if (e.step) return e.step;
