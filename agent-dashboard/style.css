@@ -265,3 +265,40 @@ html.scene-o #bottom #ticker{border-bottom:1px solid var(--border)}
   .mrg{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;color:var(--sub);padding-top:10px;border-top:1px solid var(--glassb)}.mrg .rg{width:22px;height:22px;border-radius:50%;border:3px solid var(--r);margin-left:8px}
   html.mob-o #tip{display:none!important}
 }
+
+@font-face{font-family:"Press Start 2P";src:url(fonts/press-start-2p-latin-400-normal.woff2) format("woff2");font-weight:400}
+.oleaders{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none}.oleaders line{stroke-width:1;opacity:.7}
+.olabel.cl{translate:none;display:flex;flex-direction:column;gap:1px;padding:2px 6px;border-radius:6px;line-height:1.15}
+.olabel.cl .tl{font:500 9.5px var(--mono);font-style:normal;color:var(--dim);letter-spacing:.02em;min-height:11px;white-space:pre}
+.olabel.cl.s .tl,.olabel.cl.r .tl{display:none}
+html.style-arcade{--arc:"Press Start 2P",ui-monospace,monospace}
+html.style-arcade #org{image-rendering:pixelated}
+html.style-arcade #orgwrap::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:2;background:repeating-linear-gradient(0deg,rgba(0,0,0,.16) 0 1px,transparent 1px 3px),radial-gradient(ellipse at 50% 45%,transparent 58%,rgba(0,0,0,.38) 100%);mix-blend-mode:multiply}
+html.style-arcade[data-theme=light] #orgwrap::after{background:repeating-linear-gradient(0deg,rgba(60,80,130,.07) 0 1px,transparent 1px 3px),radial-gradient(ellipse at 50% 45%,transparent 62%,rgba(60,80,130,.16) 100%)}
+html.style-arcade .olabel.cl{font:400 8px/1.5 var(--arc);border-radius:0;text-shadow:none;background:color-mix(in srgb,var(--deep) 78%,transparent);box-shadow:0 0 0 1px var(--border);padding:3px 5px}
+html.style-arcade .olabel.cl b,html.style-arcade .olabel.cl span.nm span{font-weight:400;text-transform:uppercase;letter-spacing:.02em}
+html.style-arcade .olabel.cl .tl{font:400 7px/1.4 var(--arc);color:var(--sub)}
+html.style-arcade .olabel.cl.on{box-shadow:0 0 0 2px var(--lime)}
+html.style-arcade #insp .ilab,html.style-arcade #lbmini .ilab{font-family:var(--arc);font-size:8px;letter-spacing:0;text-transform:uppercase}
+html.style-arcade .glass{border-radius:0!important;border:2px solid var(--border);box-shadow:4px 4px 0 rgba(0,0,0,.35)}
+html.style-arcade[data-theme=light] .glass{box-shadow:4px 4px 0 rgba(31,42,61,.12)}
+html.style-arcade .fc,html.style-arcade .kv,html.style-arcade .lt,html.style-arcade .sx,html.style-arcade #scrub button{border-radius:0}
+html.style-arcade .ih b{font:400 12px var(--arc);text-transform:uppercase}
+html.style-arcade .fc .fs{font-size:10px}
+
+.sbs{margin-top:10px;display:flex;flex-direction:column;gap:6px}
+.sbs .lv{font:400 8px var(--arc,var(--mono));color:var(--bg);background:var(--lime);padding:4px 6px;align-self:flex-start;letter-spacing:0}
+.sb{display:grid;grid-template-columns:14px 74px 1fr 34px;align-items:center;gap:6px;font:400 7.5px var(--arc,var(--mono));color:var(--sub)}
+.sb b{text-align:right;color:var(--text);font-weight:400;font-size:8px}.sb .ic-svg{color:var(--sub)}
+.sg{display:grid;grid-template-columns:repeat(10,1fr);gap:2px;height:10px}.sg u{background:var(--muted);box-shadow:inset 0 0 0 1px var(--border)}.sg u.on{background:var(--h);box-shadow:0 0 6px -1px var(--h)}
+html.style-arcade[data-theme=light] .sg u.on{box-shadow:none}
+html.style-arcade .lr{grid-template-columns:18px 16px 84px 1fr 28px;font:400 7.5px var(--arc)}
+html.style-arcade .lr span{text-transform:uppercase}
+html.style-arcade .lr em{background:none;height:8px;border-radius:0;background:repeating-linear-gradient(90deg,var(--muted) 0 8px,transparent 8px 10px)}
+html.style-arcade .lr em u{border-radius:0;-webkit-mask:repeating-linear-gradient(90deg,#000 0 8px,transparent 8px 10px);mask:repeating-linear-gradient(90deg,#000 0 8px,transparent 8px 10px)}
+html.style-arcade .lr i{font-family:var(--arc)}html.style-arcade .lr:first-child i,html.style-arcade .lr:first-child b{color:var(--lime)}
+html.style-arcade #lbmini .lrs{max-height:calc(100vh - 560px);min-height:150px;overflow:auto;scrollbar-width:thin}
+@media (max-width:999px){#mfab{flex-wrap:wrap;justify-content:flex-end;max-width:calc(100% - 20px)}}
+
+@media (max-width:999px){#mfab{pointer-events:none}#mfab button{pointer-events:auto}}
+html.style-retro #org{image-rendering:pixelated;image-rendering:crisp-edges;image-rendering:pixelated}

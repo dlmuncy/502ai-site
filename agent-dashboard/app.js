@@ -6,6 +6,8 @@ import { derive, fmtET, mergeLive, gates, age } from './derive.js';
 import { createPipeline } from './pipeline.js';
 import { createNebula } from './nebula.js';
 import { createOrg } from './orgchart.js';
+import { createRetro } from './retro.js';
+import { tiers } from './hier.js';
 import { insights, FORMULAS, STEPS, stepOf } from './insights.js';
 import { svg } from './icons.js';
 import { AICON } from './pipeline.js';
@@ -65,7 +67,15 @@ let B = null; try { B = createNebula($('#neb'), $('#labels'), V, { lite: Math.mi
 const orgWrap = $('#orgwrap');
 const OOPT = { lite: Math.min(screen.width, screen.height) < 700 || MQ.matches, mobile: !!LY, labels: true, reduced: RM.matches,
   onSelect: id => { paintInsp(id); paintMCard(id); }, onHover: (id, x, y) => { if (!id) { tipEl.hidden = true; return; } showTip(nodeTip(id), x, y); }, onTour: s => paintCap(s), labelHtml: n => labelOf(n) };
-let O = null; try { O = createOrg($('#org'), $('#olabels'), V, OOPT); } catch (err) { console.warn('webgl unavailable, org chart disabled', err); }
+const STYLES = ['retro', 'classic'];
+const STYLE = (() => { let q = new URLSearchParams(location.search).get('orgstyle'); if (!STYLES.includes(q)) { try { q = localStorage.getItem('dash-orgstyle'); } catch { q = null; } } return STYLES.includes(q) ? q : 'retro'; })();
+const ARC = STYLE === 'retro';
+document.documentElement.classList.add('style-' + STYLE); if (STYLE === 'retro') document.documentElement.classList.add('style-arcade');
+if (STYLE === 'retro') OOPT.labels = false;
+let O = null; try { O = STYLE === 'classic' ? createOrg($('#org'), $('#olabels'), V, OOPT) : createRetro($('#org'), $('#olabels'), V, OOPT); } catch (err) { console.warn('webgl unavailable, org chart disabled', err); }
+const nextStyle = () => STYLE === 'classic' ? 'retro' : 'classic';
+const cycleStyle = () => { const n = nextStyle(); try { localStorage.setItem('dash-orgstyle', n); } catch {} const u = new URL(location); if (u.searchParams.has('orgstyle')) u.searchParams.set('orgstyle', n); location.href = u.toString(); };
+const STYLE_NAME = { retro: 'Pixel Quest (retro game)', classic: 'Classic 3D org chart' };
 function rethemeScenes() { A = createPipeline(pipeCanvas, V, A.state, LY); B?.setTheme?.(); O?.setTheme(); paintGate(); paintDrawer(); paintLegend(); paintOrgHud(); }
 let cur = null, sceneT = -10, revealed = false;
 const btns = document.querySelectorAll('#toggle button[data-s]');
@@ -79,9 +89,10 @@ const show = s => { if (s === 'b' && !B) s = 'a'; if (s === 'o' && !O) s = 'a'; 
   const u = new URL(location); if (s !== 'o') u.searchParams.set('scene', s); else u.searchParams.delete('scene'); history.replaceState(null, '', u); };
 btns.forEach(b => b.onclick = () => show(b.dataset.s));
 const typing = e => /INPUT|TEXTAREA|SELECT/.test(e.target.tagName);
-addEventListener('keydown', e => { if (typing(e)) { if (e.key === 'Escape') { closeAssign(); e.target.blur(); } return; } const k = e.key.toLowerCase();
+addEventListener('keydown', e => { if (typing(e)) { if (e.key === 'Escape') { closeAssign(); e.target.blur(); } return; } if (e.key === 'Escape' && STYLE === 'retro' && O?.selected) { O.select(null); return; } const k = e.key.toLowerCase();
   if (k === 'escape' && (!$('#assign').hidden || !$('#drawer').hidden)) { closeAssign(); closeDrawer(); return; }
   if (k === 'l') { toggleTheme(); return; }
+  if (k === 'v') { cycleStyle(); return; }
   if (k === 'g') { toggleLegend(); return; }
   if (k === 'n') show(cur === 'b' ? 'o' : 'b'); if (k === 'd') show('a'); if (k === 'o' || k === 'escape') show('o');
   if ((k === ' ' || k === 'p') && cur === 'b') { e.preventDefault(); togglePause(); }
@@ -148,6 +159,7 @@ const paintLegend = () => { const el = $('#legend'); if (el.hidden) return; cons
   $('#lgx').onclick = toggleLegend; };
 const toggleLegend = () => { const el = $('#legend'); el.hidden = !el.hidden; $('#lgbtn').classList.toggle('on', !el.hidden); paintLegend(); };
 $('#lgbtn').onclick = toggleLegend;
+$('#stylebtn').onclick = cycleStyle; $('#stylebtn').title = `Design: ${STYLE_NAME[STYLE]} (click for ${STYLE_NAME[nextStyle()]}) · V`;
 const closeAssign = () => {}; const idleAt = () => null;
 const tipEl = $('#tip');
 const showTip = (h, cx, cy) => { if (!h) { tipEl.hidden = true; return; } tipEl.innerHTML = h; tipEl.hidden = false; const tw = tipEl.offsetWidth, th = tipEl.offsetHeight;
@@ -183,6 +195,11 @@ const nodeTip = id => { const n = O?.nodes.get(id); if (!n) return '';
 const statChip = id => { const rg = ringOf(id); return rg ? `<span class="sc" style="--r:${rg.color}"><i class="${rg.style}${rg.pulse ? ' pulse' : ''}"></i>${esc(rg.label)}</span>` : ''; };
 const stepRow = (id, mob) => { const st = stepsOf(id); if (!st) return ''; return `<div class="${mob ? 'msteps' : 'isteps'}">${STEPS.map(s => { const n = st.st[s.id].n, on = st.current === s.id;
   return `<span class="sx${on ? ' on' : ''}${n ? '' : ' z'}" style="--h:${hue(id)}" title="${esc(s.tip)}${mob ? '' : ': ' + n + ' events'}">${svg(s.icon, mob ? 20 : 15)}${mob ? `<em>${'<i></i>'.repeat(Math.min(5, Math.ceil(n / 3)))}</em>` : `<b>${n}</b>`}</span>`; }).join(mob ? '' : '<i class="ar">›</i>')}</div>`; };
+
+const arcBars = (id, r) => { const rows = V.I.board.rows, mx = k => Math.max(1, ...rows.map(x => x[k] || 0)); const h = hue(id);
+  const seg = (p, h) => `<em class="sg">${Array.from({ length: 10 }, (_, k) => `<u class="${p != null && k < Math.round(p / 10) ? 'on' : ''}" style="--h:${h}"></u>`).join('')}</em>`;
+  const row = (ic, k, p, v, t) => `<div class="sb" title="${esc(t || k)}">${svg(ic, 13)}<span>${k}</span>${seg(p, h)}<b>${v ?? 'n/a'}</b></div>`;
+  return `<div class="sbs"><div class="lv">${r?.rank ? 'RANK ' + r.rank : 'UNRANKED'}</div>${row('medal', 'SCORE', r?.score, r?.score != null ? r.score + (r.partial ? '*' : '') : null, FORMULAS.top)}${row('zap', 'EVENTS 7D', r?.w7 != null ? r.w7 / mx('w7') * 100 : null, r?.w7, FORMULAS.works)}${row('events', 'EVENTS 24H', r?.w24 != null ? r.w24 / mx('w24') * 100 : null, r?.w24, 'events in the last 24 h of the loaded timeline')}${row('target', 'EFFECT', r?.eff != null ? r.eff * 100 : null, r?.eff != null ? Math.round(r.eff * 100) + '%' : null, FORMULAS.effective)}${row('a2a', 'FLOW', V.I.streams.rows[id]?.share != null ? V.I.streams.rows[id].share * 100 : null, V.I.streams.rows[id]?.share != null ? Math.round(V.I.streams.rows[id].share * 100) + '%' : null, FORMULAS.lead)}${row('clock', 'IDLE', null, r?.idleH != null ? (r.idleH < 1 ? Math.round(r.idleH * 60) + 'm' : Math.round(r.idleH) + 'h') : null, FORMULAS.idle)}</div>`; };
 let inspId = null;
 const paintInsp = id => { const el = $('#inspb'); if (!el) return; id = id || V.I.board.top?.id || 'ceo'; inspId = id; const n = O?.nodes.get(id);
   if (n && n.kind !== 'agent' && n.kind !== 'sub' && n.kind !== 'human') { el.innerHTML = `<div class="ih"><span class="ib" style="--h:${n.hue}">${svg(n.kind === 'res' ? RES_ICON[id] : AICON[n.parent] || 'sparkles', 22)}</span><div><b>${n.kind === 'res' ? esc(RES_NAME[id]) : esc(subName(n))}</b><div class="ir">${nodeTip(id).split('<br>').slice(1).join(' · ')}</div></div></div>`; return; }
@@ -193,13 +210,13 @@ const paintInsp = id => { const el = $('#inspb'); if (!el) return; id = id || V.
     ${a.kind === 'human' ? `<div class="kvs">${kv('hourglass', 'decisions pending', PUB ? (V.waitingCount ?? 'n/a') : V.waiting.filter(w => !w.answer).length)}${kv('check', 'approvals logged', V.approvals ?? 'unknown')}</div>` : `
     <div class="ilab">${svg('route', 12)} step chain <span>(current step pulses)</span></div>${stepRow(id)}
     <div class="ilab">${svg('events', 12)} activity · last 24 h of the loaded timeline</div>${spark(id, 286, 36)}
-    <div class="kvs">${kv('trophy', 'rank', r?.rank ? '#' + r.rank : null, FORMULAS.top)}${kv('medal', 'score', r?.score != null ? r.score + (r.partial ? '*' : '') : null, FORMULAS.top)}${kv('zap', 'events 7 d', r?.w7, FORMULAS.works)}${kv('target', 'effective', r?.eff != null ? Math.round(r.eff * 100) + '%' : null, FORMULAS.effective)}${kv('clock', 'idle', r?.idleH != null ? (r.idleH < 1 ? Math.round(r.idleH * 60) + 'm' : Math.round(r.idleH) + 'h') : null, FORMULAS.idle)}${kv('a2a', 'share of flow', V.I.streams.rows[id]?.share != null ? Math.round(V.I.streams.rows[id].share * 100) + '%' : null, FORMULAS.lead)}</div>`}
+${ARC ? arcBars(id, r) : `<div class="kvs">${kv('trophy', 'rank', r?.rank ? '#' + r.rank : null, FORMULAS.top)}${kv('medal', 'score', r?.score != null ? r.score + (r.partial ? '*' : '') : null, FORMULAS.top)}${kv('zap', 'events 7 d', r?.w7, FORMULAS.works)}${kv('target', 'effective', r?.eff != null ? Math.round(r.eff * 100) + '%' : null, FORMULAS.effective)}${kv('clock', 'idle', r?.idleH != null ? (r.idleH < 1 ? Math.round(r.idleH * 60) + 'm' : Math.round(r.idleH) + 'h') : null, FORMULAS.idle)}${kv('a2a', 'share of flow', V.I.streams.rows[id]?.share != null ? Math.round(V.I.streams.rows[id].share * 100) + '%' : null, FORMULAS.lead)}</div>`}`}
     ${PUB ? '' : inspPriv(id)}`; };
 const inspPriv = () => '';
 const paintLbMini = () => { const el = $('#lbmini'); if (!el) return; const B = V.I.board;
   const tile = (ic, t, r, v) => `<button class="lt" data-sel="${r?.id || ''}" title="${esc(t)}${r ? ': ' + esc(nm(r.id)) : ': n/a'}">${svg(ic, 14)}${r ? svg(AICON[r.id] || 'sparkles', 16, hue(r.id)) : '<i>n/a</i>'}<b>${r ? v(r) : ''}</b></button>`;
-  el.innerHTML = `<div class="ilab">${svg('trophy', 12)} leaderboard <span>now</span></div><div class="lts">${tile('zap', 'works the most', B.works, r => r.w24 + '/24h')}${tile('target', 'most effective', B.effective, r => Math.round(r.eff * 100) + '%')}${tile('hourglass', 'idles the most', B.idle, r => Math.round(r.idleH) + 'h')}${tile('trophy', 'overall #1', B.top, r => r.score)}</div>
-    <div class="lrs">${B.rank.slice(0, 6).map(r => `<button class="lr" data-sel="${r.id}" title="${esc(nm(r.id))}: score ${r.score}${r.partial ? '*' : ''}"><i>${r.rank}</i>${svg(AICON[r.id] || 'sparkles', 14, hue(r.id))}<span>${esc(nm(r.id))}</span><em><u style="width:${r.score}%;background:${hue(r.id)}"></u></em><b>${r.score}</b></button>`).join('')}</div>`; };
+  el.innerHTML = `<div class="ilab">${svg('trophy', 12)} ${ARC ? 'high scores' : 'leaderboard'} <span>now</span></div><div class="lts">${tile('zap', 'works the most', B.works, r => r.w24 + '/24h')}${tile('target', 'most effective', B.effective, r => Math.round(r.eff * 100) + '%')}${tile('hourglass', 'idles the most', B.idle, r => Math.round(r.idleH) + 'h')}${tile('trophy', 'overall #1', B.top, r => r.score)}</div>
+    <div class="lrs">${B.rank.slice(0, ARC ? 30 : 6).map(r => `<button class="lr" data-sel="${r.id}" title="${esc(nm(r.id))}: score ${r.score}${r.partial ? '*' : ''}"><i>${r.rank}</i>${svg(AICON[r.id] || 'sparkles', 14, hue(r.id))}<span>${esc(nm(r.id))}</span><em><u style="width:${r.score}%;background:${hue(r.id)}"></u></em><b>${r.score}</b></button>`).join('')}</div>`; };
 $('#lbmini').addEventListener('click', e => { const b = e.target.closest('[data-sel]'); if (b && b.dataset.sel) O?.select(b.dataset.sel); });
 const feedPush = e => { const el = $('#feedl'); if (!el || !e || cur !== 'o' || LY) return; const id = V.A[e.agent] ? e.agent : null, h = id ? hue(id) : C.sub;
   const rec = [...new Set((e.route || []).filter(([f]) => f === e.agent).map(([, t]) => t))].filter(t => t !== e.agent).slice(0, 4);
@@ -232,24 +249,25 @@ const CAPS = {
   team: () => { const ids = ['reed', 'evelyn', 'dutchess'].filter(i => V.A[i]); const n = V.events.filter(e => ids.includes(e.agent)).length; const m = V.D.links.filter(l => ids.includes(l.from) && l.to === 'ceo').reduce((s, l) => s + (l.count || 0), 0);
     return [ids.map(i => svg(i, 15, hue(i))).join(''), 'VPS team · ' + ids.map(nm).join(', '), `${n} events · ${m} known messages back to the CEO`]; },
   skills: () => { const sf = V.A.skill_finder, us = V.A.up_skiller; return [svg('skill_finder', 15, hue('ceo')) + svg('up_skiller', 15, hue('ceo')), 'Skills loop · Skill-Finder vets, Up-Skiller installs', `${sf?.metrics?.runs ?? 'unknown'} finder runs · ${us?.metrics?.installed_last ?? 'unknown'} installed on the last run`]; },
-  staff: () => { const ids = ['viv', 'friend', 'motion', 'agent_builder', 'product_manager', 'cto', 'cso'].filter(i => V.A[i]); const on = ids.filter(i => { const h = V.hrs(V.A[i]); return h != null && h <= 24; }).length;
-    return [ids.map(i => svg(i, 15, hue(i))).join(''), 'Staff ring · ' + ids.map(nm).join(', '), `${on} of ${ids.length} active in the last 24 h`]; },
+  viv: () => { const rest = tiers(V.A).rest, on = rest.filter(i => { const h = V.hrs(V.A[i]); return h != null && h <= 24; }).length; return [svg('viv', 16, hue('viv')), 'Viv · everyone reports to her', `${rest.length} agents under Viv · ${on} active in the last 24 h`]; },
+  staff: () => { const ids = tiers(V.A).peers; const on = ids.filter(i => { const h = V.hrs(V.A[i]); return h != null && h <= 24; }).length;
+    return [ids.slice(0, 7).map(i => svg(i, 15, hue(i))).join(''), 'Under Viv · ' + ids.map(nm).join(', '), `${on} of ${ids.length} active in the last 24 h`]; },
   infra: () => [svg('hub', 15) + svg('drive', 15), 'Shared infrastructure', `${V.D.meta?.hub_posts ?? 'unknown'} hub posts across ${Object.keys(V.D.meta?.hub_channels || {}).length} channels · shared docs`],
 };
 const paintCap = (s, i, n) => { const el = $('#ocap'); $('#ttour')?.classList.toggle('on', !!s); $('#mfab [data-a=tour]')?.classList.toggle('on', !!s); if (!s) { el.hidden = true; return; } const [ic, t, line] = (CAPS[s.key] || CAPS.overview)();
   el.hidden = false; el.innerHTML = `<span class="ci">${ic}</span><span class="ct"><b>${esc(t)}</b><span>${esc(line)}</span></span><span class="cp">${Array.from({ length: n }, (_, k) => `<i class="${k === i ? 'on' : ''}"></i>`).join('')}</span>`; };
 let mfabExtra = () => [];
 const paintMFab = () => { const el = $('#mfab'); if (!el) return;
-  el.innerHTML = [['theme', THEME === 'light' ? 'moon' : 'sun'], ['legend', 'legend'], ['tour', 'tour'], ['reset', 'locate'], ['classic', 'dashboard'], ...mfabExtra()].map(([a, ic, b]) => `<button data-a="${a}" aria-label="${a}">${svg(ic, 20)}${b ? `<b>${b}</b>` : ''}</button>`).join(''); };
+  el.innerHTML = [['theme', THEME === 'light' ? 'moon' : 'sun'], ['legend', 'legend'], ['tour', 'tour'], ['reset', 'locate'], ['style', 'gamepad'], ['classic', 'dashboard'], ...mfabExtra()].map(([a, ic, b]) => `<button data-a="${a}" aria-label="${a}">${svg(ic, 20)}${b ? `<b>${b}</b>` : ''}</button>`).join(''); };
 $('#mfab').addEventListener('click', e => { const b = e.target.closest('[data-a]'); if (!b) return; const a = b.dataset.a;
   if (a === 'theme') toggleTheme(); else if (a === 'legend') { const el = $('#mleg'); el.hidden = !el.hidden; paintMLeg(); } else if (a === 'tour') O?.tour(); else if (a === 'reset') { O?.select(null); O?.reset(); }
-  else if (a === 'classic') show('a'); else openDrawer(a); });
+  else if (a === 'style') cycleStyle(); else if (a === 'classic') show('a'); else openDrawer(a); });
 const paintMLeg = () => { const el = $('#mleg'); if (el.hidden) return; const ids = ['damon', 'ceo', ...TOP.filter(i => i !== 'ceo'), 'skill_finder', 'up_skiller'].filter(i => V.A[i]);
   const ring = (st, col) => `<i class="rg ${st}" style="--r:${col}"></i>`;
   el.innerHTML = `<button class="mx" data-x aria-label="close">${svg('x', 20)}</button><div class="mlg">${ids.map(i => `<button data-sel="${i}" aria-label="${i}"><span class="ib" style="--h:${hue(i)}">${svg(AICON[i], 20)}</span>${isSub(i) ? `<em style="background:${accent(i).color}"></em>` : ''}</button>`).join('')}</div>
     <div class="mrg">${ring('solid thin', C.sub)}${svg('zap', 16)}${ring('dashed', C.waiting)}${svg('hourglass', 16)}${ring('dotted', C.dim)}${svg('clock', 16)}${ring('dashed', C.sub)}${svg('plug', 16)}${PUB ? '' : ring('solid thick', C.sub) + svg('alert', 16)}</div>`; };
 $('#mleg').addEventListener('click', e => { if (e.target.closest('[data-x]')) { $('#mleg').hidden = true; return; } const b = e.target.closest('[data-sel]'); if (b) { $('#mleg').hidden = true; O?.select(b.dataset.sel); } });
-const paintMCard = id => { const el = $('#mcard'); if (!el) return; if (!id || !LY || cur !== 'o') { el.hidden = true; return; } const n = O?.nodes.get(id); if (!n) { el.hidden = true; return; }
+const paintMCard = id => { const el = $('#mcard'); if (!el) return; if (!id || !LY || cur !== 'o' || STYLE === 'retro') { el.hidden = true; return; } const n = O?.nodes.get(id); if (!n) { el.hidden = true; return; }
   const a = V.A[id], r = rowOf(id), rg = ringOf(id), h = n.hue; const ic = n.kind === 'res' ? RES_ICON[id] : n.kind === 'session' ? AICON[n.parent] || 'sparkles' : AICON[id] || 'sparkles';
   const gauge = r?.score != null ? `<svg class="gauge" width="54" height="54" viewBox="0 0 54 54" aria-hidden="true"><circle cx="27" cy="27" r="22" fill="none" stroke="${C.border}" stroke-width="5"/><circle cx="27" cy="27" r="22" fill="none" stroke="${h}" stroke-width="5" stroke-linecap="round" stroke-dasharray="${(r.score / 100 * 138.2).toFixed(1)} 200" transform="rotate(-90 27 27)"/></svg>${svg('medal', 18)}` : '';
   el.hidden = false; el.style.setProperty('--h', h);

@@ -3,12 +3,12 @@ import { C, THEME } from './palette.js';
 import { hue, accent, subAgents, STATUS_RING } from './identity.js';
 import { ICONS } from './icons.js';
 
-const STAFF_IDS = ['viv', 'friend', 'motion', 'agent_builder', 'product_manager', 'cto', 'cso'];
-const TEAM_IDS = ['reed', 'evelyn', 'dutchess', 'skill_finder', 'up_skiller'];
+import { tiers } from './hier.js';
+let STAFF_IDS = [];
 const SUBS = new Set(['skill_finder', 'up_skiller']);
 const ICON_OF = { hub: 'hub', drive: 'drive' };
 const RES = [['hub', 'hub'], ['drive', 'drive']];
-const Y0 = { damon: 265, staff: 205, ceo: 45, team: -60, sess: -168, floor: -250, res: -220 }, RS0 = { staff: 300, team: 190, res: 330, floor: 420 };
+const Y0 = { damon: 265, viv: 195, staff: 90, ceo: 40, team: -60, sess: -168, floor: -250, res: -220 }, RS0 = { staff: 300, team: 190, res: 330, floor: 420 };
 let Y = { ...Y0 }, RS = { ...RS0 };
 
 export function createOrg(canvas, labelLayer, V, opt = {}) {
@@ -51,11 +51,14 @@ export function createOrg(canvas, labelLayer, V, opt = {}) {
     const A = V.A, has = id => !!A[id];
     const N = new Map(); const node = (id, kind, p, size, extra = {}) => { const n = { id, kind, p, size: size * MS, ...extra, pulse: 0, heat: 0 }; N.set(id, n); return n; };
     if (has('damon')) node('damon', 'human', new THREE.Vector3(0, Y.damon, 0), 46);
-    node('ceo', 'agent', new THREE.Vector3(0, Y.ceo, 0), 54);
-    const staff = STAFF_IDS.filter(has), team = TEAM_IDS.filter(has);
-    staff.forEach((id, i) => { const a = (i + 0.5) / staff.length * Math.PI * 2 + 0.35; node(id, 'agent', new THREE.Vector3(Math.cos(a) * RS.staff, Y.staff + (i % 2 ? -14 : 14) * SY, Math.sin(a) * RS.staff), 40, { parent: has('damon') ? 'damon' : 'ceo', ang: a }); });
-    team.forEach((id, i) => { const a = i / team.length * Math.PI * 2 + 0.35 + Math.PI / team.length; const sub = SUBS.has(id);
-      node(id, sub ? 'sub' : 'agent', new THREE.Vector3(Math.cos(a) * RS.team, Y.team + (sub ? 22 : 0) * SY, Math.sin(a) * RS.team), sub ? 30 : 42, { parent: 'ceo', ang: a, sub }); });
+    const TR = tiers(A), L2 = TR.second;
+    if (L2) node(L2, 'agent', new THREE.Vector3(0, Y.viv, 0), 50, { parent: TR.top });
+    const under = L2 || (has('damon') ? 'damon' : null);
+    if (has('ceo')) node('ceo', 'agent', new THREE.Vector3(0, Y.ceo, 0), 54, { parent: under });
+    const peers = TR.peers.filter(i => i !== 'ceo'), subs = TR.subs; STAFF_IDS = peers;
+    peers.forEach((id, i) => { const a = (i + 0.5) / peers.length * Math.PI * 2 + 0.35; node(id, 'agent', new THREE.Vector3(Math.cos(a) * RS.staff, Y.staff + (i % 2 ? -14 : 14) * SY, Math.sin(a) * RS.staff), 40, { parent: under, ang: a }); });
+    subs.forEach((id, i) => { const a = i / subs.length * Math.PI * 2 + 0.35 + Math.PI / Math.max(1, subs.length);
+      node(id, 'sub', new THREE.Vector3(Math.cos(a) * RS.team, Y.team + 22 * SY, Math.sin(a) * RS.team), 30, { parent: under, ang: a, sub: true }); });
     const res = RES;
     res.forEach(([id], i) => { const a = (i / res.length) * Math.PI * 2 + 1.1; node(id, 'res', new THREE.Vector3(Math.cos(a) * RS.res, Y.res, Math.sin(a) * RS.res), 30); });
     const dyn = subAgents(V, { maxPer: lite ? 2 : 3 }).filter(s => !s.static);
@@ -88,7 +91,7 @@ export function createOrg(canvas, labelLayer, V, opt = {}) {
     const curveOf = (a, b, lift) => { const P = N.get(a).p, Q = N.get(b).p; const mid = P.clone().add(Q).multiplyScalar(0.5); const out = mid.clone().setY(0); if (out.length() > 1) out.normalize().multiplyScalar(lift * 0.6);
       mid.add(out); mid.y += lift; return new THREE.QuadraticBezierCurve3(P.clone(), mid, Q.clone()); };
     const tree = []; N.forEach(n => { if (n.parent && N.has(n.parent)) tree.push([n.parent, n.id, n.kind === 'session' && !n.known]); });
-    if (N.has('damon')) tree.push(['damon', 'ceo', false]);
+    if (N.has('damon') && !L2 && N.has('ceo')) tree.push(['damon', 'ceo', false]);
     tree.forEach(([a, b, unk]) => { const cv = curveOf(a, b, N.get(b).kind === 'session' ? 0 : -18); const pts = cv.getPoints(32); const g = new THREE.BufferGeometry().setFromPoints(pts);
       const col = unk ? C.sub : hue(N.get(b).kind === 'session' ? a : b);
       const m = unk ? new THREE.LineDashedMaterial({ color: C.sub, dashSize: 5, gapSize: 5, transparent: true, opacity: 0.55 }) : new THREE.LineBasicMaterial({ color: col, transparent: true, opacity: L ? 0.55 : 0.38 });
