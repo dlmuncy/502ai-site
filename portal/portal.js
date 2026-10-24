@@ -46,12 +46,25 @@ var API_BASE_URL = "https://n8n.damonmuncy.pro/webhook";
     return node;
   }
 
+  var ALLOWED_LINK_HOSTS = {
+    "502ai.pro": true,
+    "www.502ai.pro": true,
+    "n8n.damonmuncy.pro": true,
+    "checkout.stripe.com": true,
+    "billing.stripe.com": true,
+    "pay.stripe.com": true,
+    "buy.stripe.com": true,
+    "invoice.stripe.com": true
+  };
+
   function safeHttps(value) {
     if (typeof value !== "string" || value.length > 2000) return "";
     try {
       var url = new URL(value);
       if (url.protocol !== "https:") return "";
       if (url.username || url.password) return "";
+      var host = url.hostname;
+      if (!Object.prototype.hasOwnProperty.call(ALLOWED_LINK_HOSTS, host)) return "";
       return url.href;
     } catch (err) {
       return "";
@@ -157,8 +170,6 @@ var API_BASE_URL = "https://n8n.damonmuncy.pro/webhook";
     wrap.appendChild(el("h2", null, "Request a new link"));
     wrap.appendChild(el("p", "quiet", "Enter the email you used at checkout. If we have an order for it, we will send a new link. We show the same confirmation either way."));
     var form = document.createElement("form");
-    form.method = "post";
-    form.action = "/portal/";
     var label = el("label", null, "Email");
     label.htmlFor = "resend-email";
     var input = document.createElement("input");
@@ -231,6 +242,12 @@ var API_BASE_URL = "https://n8n.damonmuncy.pro/webhook";
     return names[offerKey(order)] || "Your order";
   }
 
+  function plainText(value) {
+    if (typeof value !== "string") return "";
+    var text = value.replace(/[\u0000-\u001f]/g, " ").replace(/\s+/g, " ").trim();
+    return text.slice(0, 2000);
+  }
+
   function firstName(order) {
     if (order && typeof order.first_name === "string" && order.first_name.trim()) return order.first_name.trim();
     return "there";
@@ -294,6 +311,10 @@ var API_BASE_URL = "https://n8n.damonmuncy.pro/webhook";
     if (key === "kit" && current === "delivered") {
       box.appendChild(el("p", "quiet", "Your Starter Kit is delivered. Download it above."));
     }
+    var note = plainText(order.status_note);
+    var updated = plainText(order.status_updated_at) || plainText(order.updated_at);
+    if (note) box.appendChild(el("p", "lede", note));
+    if (updated) box.appendChild(el("p", "quiet", "Updated " + updated));
     return box;
   }
 
@@ -307,7 +328,7 @@ var API_BASE_URL = "https://n8n.damonmuncy.pro/webhook";
       audit: [
         ["You", "Fill in the short form below so we know about your business."],
         ["Us", "We review your business and website."],
-        ["Us", "Your written audit appears on this page."],
+        ["Us", "Your written audit will be emailed to you."],
         ["You", "Reply with any questions."]
       ],
       qualifier: [
@@ -320,7 +341,7 @@ var API_BASE_URL = "https://n8n.damonmuncy.pro/webhook";
       website: [
         ["You", "Fill in the form below and send your logo and photos."],
         ["You", "Check your domain details with us."],
-        ["Us", "Your draft preview link appears on this page."],
+        ["Us", "Your draft preview link will be emailed to you."],
         ["You", "Send one round of feedback."],
         ["Us", "We launch your site."]
       ]
@@ -348,13 +369,23 @@ var API_BASE_URL = "https://n8n.damonmuncy.pro/webhook";
   function renderDownloads(order, kit) {
     var files = Array.isArray(order.downloads) ? order.downloads : [];
     var ready = [];
+    var supplied = 0;
     files.forEach(function (file) {
       if (!file || typeof file !== "object") return;
+      supplied += 1;
       var href = safeHttps(file.url);
       var label = typeof file.label === "string" && file.label.trim() ? file.label.trim() : "Download";
       if (href) ready.push({ href: href, label: label });
     });
-    if (!kit && !ready.length) return el("div");
+    if (!kit && !ready.length && !supplied) return el("div");
+    if (!ready.length && supplied) {
+      var blocked = panel();
+      blocked.appendChild(el("p", "lede", "We could not show that link. Email us and we will send a new one."));
+      var blockedActions = el("div", "actions");
+      blockedActions.appendChild(link(mailHref(order.id), "Email us", "button secondary"));
+      blocked.appendChild(blockedActions);
+      return blocked;
+    }
     var box = panel();
     if (kit) {
       box.appendChild(el("h2", null, "Your Website Starter Kit"));
@@ -409,8 +440,6 @@ var API_BASE_URL = "https://n8n.damonmuncy.pro/webhook";
       website: "What do you do, where are you, what are your hours, and how should customers contact you? For a logo or photos, paste a Google Drive or Dropbox link, or email the files to " + SUPPORT + "."
     };
     var form = document.createElement("form");
-    form.method = "post";
-    form.action = "/portal/";
     form.appendChild(field("Business name", "business_name", "text", true, 200, "Required."));
     form.appendChild(field("Website address", "website", "text", false, 500, "Optional. Write \"none yet\" if you do not have one."));
     var notes = document.createElement("textarea");
@@ -537,7 +566,7 @@ var API_BASE_URL = "https://n8n.damonmuncy.pro/webhook";
     if (key === "website") {
       box.appendChild(el("h2", null, "Your $19 per month plan"));
       var plan = order.plan && typeof order.plan === "object" ? order.plan : null;
-      var planLine = "Hosting, security updates, and one small edit per month. Cancel anytime.";
+      var planLine = "Hosting, security updates, and one small edit per month. To cancel, email " + SUPPORT + ".";
       if (plan && typeof plan.name === "string" && plan.name.trim()) planLine = plan.name.trim() + ". " + planLine;
       if (plan && typeof plan.price_display === "string" && plan.price_display.trim()) planLine += " (" + plan.price_display.trim() + ")";
       box.appendChild(el("p", "lede", planLine));
@@ -546,7 +575,7 @@ var API_BASE_URL = "https://n8n.damonmuncy.pro/webhook";
         var row = el("div", "actions");
         row.appendChild(link(manage, "Manage your $19/mo plan", "button secondary"));
         box.appendChild(row);
-        box.appendChild(el("p", "quiet", "Opens your Stripe billing page. We never see your full card number."));
+        box.appendChild(el("p", "quiet", "We never see your full card number."));
       }
     }
     return box;
@@ -556,14 +585,14 @@ var API_BASE_URL = "https://n8n.damonmuncy.pro/webhook";
     var box = panel();
     box.appendChild(el("h2", null, "Support"));
     var items = [
-      ["When will I hear back?", "SAMPLE: We have not published a response time. Email us any time and we will reply. We do not promise a specific response time on this page until it is confirmed."],
+      ["When will I hear back?", "Email us any time and we will reply. We do not promise a specific response time."],
       ["Where is my receipt?", "At the top of this page, under View receipt, when a receipt link is available. Stripe also emailed a receipt to the address you used at checkout."],
       ["How do I get my file again?", key === "kit"
         ? "Use the download section on this page. If a link stops working, email us and we will send a new one."
-        : "Your deliverable stays on this page when it is ready. If the link to this page stops working, reply to your order email and we will send a new one."],
-      ["How do changes work?", "Tell us what you would like changed and where, by email. A short note and an example or screenshot help most. SAMPLE: how many revision rounds are included is not decided yet."],
+        : "We email your deliverable. If you need another copy, reply to your order email."],
+      ["How do changes work?", "Tell us what you would like changed and where, by email. A short note and an example or screenshot help most."],
       ["How do I reach a person?", "Use the Email us button or reply to your order email. We read every message."],
-      ["Refunds", "SAMPLE: Refund terms are on the Terms page. A refund within 7 days if work has not started is written there and is still pending the owner's approval. We do not promise a number of days to finish the work."]
+      ["Refunds", "Refund terms are on the Terms page. If you ask within 7 days and work has not started, we refund the purchase. We do not promise a number of days to finish the work."]
     ];
     items.forEach(function (item) {
       var detail = document.createElement("details");

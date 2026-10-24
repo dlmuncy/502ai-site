@@ -11,9 +11,14 @@ var API_BASE_URL = "https://n8n.damonmuncy.pro/webhook";
   }
 
   function kindOf(form) {
+    if (form.querySelector("[name='name'], [name='business_goals']")) return "consultation";
     var label = labelOf(form);
-    if (label === "Send request") return "consultation";
-    if (label === "Get the guide" || label === "Email me the free guide" || label === "Send me the free guide") {
+    if (
+      label === "Send request" ||
+      label === "Get the guide" ||
+      label === "Email me the free guide" ||
+      label === "Send me the free guide"
+    ) {
       return form.closest("#free-guide") ? "home" : "checklist";
     }
     return "";
@@ -72,7 +77,10 @@ var API_BASE_URL = "https://n8n.damonmuncy.pro/webhook";
 
   function payloadFor(form, source) {
     if (source !== "consultation") {
-      return { source: source, name: "", email: textOf(form, "email").slice(0, 254) };
+      var nameField = form.querySelector("[name='name']");
+      var name = nameField && typeof nameField.value === "string" ? nameField.value.trim() : "";
+      if (!nameField) name = "Guide request";
+      return { source: source, name: name.slice(0, 200), email: textOf(form, "email").slice(0, 254) };
     }
     var name = textOf(form, "name") || reviewValue(form, "Your name");
     var email = textOf(form, "email") || reviewValue(form, "Your email");
