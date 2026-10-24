@@ -312,7 +312,7 @@ var API_BASE_URL = "https://n8n.damonmuncy.pro/webhook";
       box.appendChild(el("p", "quiet", "Your Starter Kit is delivered. Download it above."));
     }
     var note = plainText(order.status_note);
-    var updated = plainText(order.status_updated_at) || plainText(order.updated_at);
+    var updated = plainText(order.status_updated_display) || plainText(order.status_updated_at) || plainText(order.updated_at);
     if (note) box.appendChild(el("p", "lede", note));
     if (updated) box.appendChild(el("p", "quiet", "Updated " + updated));
     return box;

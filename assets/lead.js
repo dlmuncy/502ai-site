@@ -19,7 +19,7 @@ var API_BASE_URL = "https://n8n.damonmuncy.pro/webhook";
       label === "Email me the free guide" ||
       label === "Send me the free guide"
     ) {
-      return form.closest("#free-guide") ? "home" : "checklist";
+      return form.closest("#free-guide") ? "home" : "contact";
     }
     return "";
   }
