@@ -3,16 +3,17 @@ import { hue, accent, isSub, subAgents, STATUS_RING } from './identity.js';
 import { fmtET } from './derive.js';
 import { drawIcon } from './icons.js';
 import { STEPS, FORMULAS, stepOf } from './insights.js';
-export const W = 1600, H = 840;
+export const W = 1760, H = 840;
 const PUB = typeof window !== 'undefined' && !!window.DASH_PUBLIC;
 const ease = t => t < 0 ? 0 : t > 1 ? 1 : t * t * (3 - 2 * t);
-export const AICON = { ceo: 'ceo', reed: 'reed', evelyn: 'evelyn', dutchess: 'dutchess', viv: 'viv', motion: 'motion', friend: 'friend', agent_builder: 'agent_builder', skill_finder: 'skill_finder', up_skiller: 'up_skiller', product_manager: 'product_manager', damon: 'damon' };
-export const SHORT = { agent_builder: 'Builder', skill_finder: 'Finder', up_skiller: 'Up-Skiller', product_manager: 'PM', dutchess: 'Dutchess', viv: 'Viv', ceo: 'CEO', damon: 'Damon' };
+export const AICON = { ceo: 'ceo', reed: 'reed', evelyn: 'evelyn', dutchess: 'dutchess', viv: 'viv', motion: 'motion', friend: 'friend', agent_builder: 'agent_builder', skill_finder: 'skill_finder', up_skiller: 'up_skiller', product_manager: 'product_manager', cto: 'cto', cso: 'cso', damon: 'damon' };
+export const SHORT = { agent_builder: 'Builder', skill_finder: 'Finder', up_skiller: 'Up-Skiller', product_manager: 'PM', cto: 'CTO', cso: 'CSO', dutchess: 'Dutchess', viv: 'Viv', ceo: 'CEO', damon: 'Damon' };
 const short = (id, A) => SHORT[id] || (A[id]?.name || id);
 const STG = ['intake', 'route', 'execute', 'QA', 'human gate', 'outcome'];
 const STGI = ['intake', 'route', 'build', 'qa', 'gate', 'deliver'];
 
-export function createPipeline(canvas, V, prev) {
+export function createPipeline(canvas, V, prev, LY) {
+  const MOB = !!(LY && LY.mobile);
   const ctx = canvas.getContext('2d', { alpha: false });
   const D = V.D, I = V.I || { steps: {}, streams: { links: {}, channels: {}, stages: {}, types: {}, rows: {} }, board: { rows: [], rank: [] } };
   const S = { panels: {}, links: [], spineHeat: prev?.spineHeat || new Float32Array(40), flash: prev?.flash || {}, log: prev?.log || [], cursor: prev?.cursor || null, born: prev?.born ?? null, view: { z: 1, ox: 0, oy: 0 }, tips: [], lbY: prev?.lbY || {}, lbRank: prev?.lbRank || {}, lbGlow: prev?.lbGlow || {} };
@@ -20,15 +21,30 @@ export function createPipeline(canvas, V, prev) {
   const tip = (x, y, w, h, html) => S.tips.push({ x, y, w, h, html });
   const P = (id, x, y, w, h, kind, order) => (S.panels[id] = { id, x, y, w, h, kind, order });
   const IN3 = 'skills';
+  let WH = H, WW = W, RX = 0, laneX = 0;
+  const BOARD_NARROW = 330, boardH = w => w >= BOARD_NARROW ? 264 : 190 + (Object.keys(V.A).length + 1) * 13.2 + 12;
+  const streamsH = () => 70 + 15 * (Object.keys(D.meta.hub_channels || {}).length + STG.length) + 6;
+  if (MOB) {
+    WW = LY.ww; const M = 8; laneX = 58; RX = 76; const RW = WW - M - RX, cols = RW >= 2 * 170 + 10 ? 2 : 1, cw = (RW - (cols - 1) * 10) / cols; let y = M, o = 0;
+    const place = (items, x0, colw, n) => { for (let i = 0; i < items.length; i += n) { const row = items.slice(i, i + n); const rh = Math.max(...row.map(r => r[1]));
+      row.forEach(([id, h, kind], c) => P(id, x0 + c * (colw + 10), y, colw, h, kind, o++)); y += rh + 12; } };
+    place([['damon', 160, 'input'], ['drive', 118, 'input'], [IN3, 118, 'input'], ['hub', 112, 'input']], RX, cw, cols);
+    place(['reed', 'evelyn', 'dutchess', 'skill_finder', 'up_skiller', 'viv', 'agent_builder', 'friend', 'motion', 'product_manager', 'cto', 'cso'].filter(id => V.A[id]).map(id => [id, 258, 'agent']), RX, cw, cols);
+    P('ceo', M, M, 50, y - 12 - M, 'ceo', o++); y += 6;
+    const FW = WW - 2 * M, wc = FW >= 2 * 270 + 10 ? 2 : 1, ww = (FW - (wc - 1) * 10) / wc;
+    place([['brain', 258, 'widget'], ['streams', streamsH(), 'widget'], ['runlog', 264, 'bottom'], ['spectro', 264, 'widget'], ['board', boardH(ww), 'bottom'], ['output', 264, 'bottom']], M, ww, wc);
+    WH = y - 12 + M;
+  } else {
   P('damon', 10, 10, 240, 160, 'input', 0); P('drive', 10, 180, 240, 118, 'input', 1);
   P(IN3, 10, 308, 240, 118, 'input', 2); P('hub', 10, 436, 240, 112, 'input', 3);
   P('ceo', 290, 10, 100, 538, 'ceo', 4);
-  const GX = 430, GAP = 12, CW = (1160 - 5 * GAP) / 6, RH = 258;
-  const grid = [['reed', 'evelyn', 'dutchess', 'skill_finder', 'up_skiller', 'viv'], ['brain', 'agent_builder', 'friend', 'motion', 'product_manager', 'streams']];
-  grid.forEach((row, r) => row.forEach((id, c) => { if (id !== 'brain' && id !== 'streams' && !V.A[id]) return; P(id, GX + c * (CW + GAP), 10 + r * (RH + 22), CW, RH, id === 'brain' || id === 'streams' ? 'widget' : 'agent', 5 + r * 6 + c); }));
-  P('runlog', 10, 566, 470, 264, 'bottom', 17); P('spectro', 490, 566, 390, 264, 'widget', 18);
-  P('board', 890, 566, 340, 264, 'bottom', 19); P('output', 1240, 566, 350, 264, 'bottom', 20);
-  const LANE = 10 + RH + 11;
+  const GX = 430, GAP = 12, CW = (1320 - 6 * GAP) / 7, RH = 258;
+  const grid = [['reed', 'evelyn', 'dutchess', 'skill_finder', 'up_skiller', 'viv', 'brain'], ['agent_builder', 'friend', 'motion', 'product_manager', 'cto', ...(V.A.cso ? ['cso'] : []), 'streams']];
+  grid.forEach((row, r) => row.forEach((id, c) => { if (id !== 'brain' && id !== 'streams' && !V.A[id]) return; const span = id === 'streams' ? 7 - c : 1; P(id, GX + c * (CW + GAP), 10 + r * (RH + 22), CW * span + GAP * (span - 1), RH, id === 'brain' || id === 'streams' ? 'widget' : 'agent', 5 + r * 7 + c); }));
+  P('runlog', 10, 566, 520, 264, 'bottom', 19); P('spectro', 540, 566, 430, 264, 'widget', 20);
+  P('board', 980, 566, 380, 264, 'bottom', 21); P('output', 1370, 566, 380, 264, 'bottom', 22);
+  }
+  const LANE = 10 + 258 + 11;
   const BUS = 557;
   const fan = t => /team|reed\/evelyn\/dutchess/.test(t) ? ['reed', 'evelyn', 'dutchess'] : [t === 'board' ? 'drive' : t];
   const raw = [...D.links.filter(l => l.from !== 'vps agents'),
@@ -37,7 +53,13 @@ export function createPipeline(canvas, V, prev) {
   const isAgent = id => S.panels[id].kind === 'agent';
   const ceo = S.panels.ceo;
   const agentPort = (p, k) => { const row1 = p.y < LANE; return [[p.x, row1 ? p.y + p.h - 34 - k * 7 : p.y + 34 + k * 7], [p.x - 7 + (k % 3) * 1.5, row1 ? p.y + p.h - 34 - k * 7 : p.y + 34 + k * 7]]; };
-  const routeOf = (l, i) => {
+  const portM = (q, i) => { if (q.x < RX + 5) { const y = q.y + 40 + (i % 5) * 6; return [[q.x, y], [laneX + 2 + (i % 6) * 2.3, y]]; }
+    const ax = q.x + 14 + (i % 4) * 5, gy = q.y - 4 - (i % 3) * 1.5; return [[ax, q.y], [ax, gy], [laneX + 2 + (i % 6) * 2.3, gy]]; };
+  const routeM = (l, i) => { const f = S.panels[l.from], t = S.panels[l.to], ce = ceo.x + ceo.w;
+    if (l.to === 'ceo') { const a = portM(f, i); return [...a, [ce, a[a.length - 1][1]]]; }
+    if (l.from === 'ceo') { const b = portM(t, i).reverse(); return [[ce, b[0][1]], ...b]; }
+    return [...portM(f, i), ...portM(t, i + 1).reverse()]; };
+  const routeOf = (l, i) => { if (MOB) return routeM(l, i);
     const f = S.panels[l.from], t = S.panels[l.to], off = ((i % 7) - 3) * 2.2;
     if (f.kind === 'input' && l.to === 'ceo') { const y = f.y + f.h * 0.55; return [[f.x + f.w, y], [f.x + f.w + 20, y], [ceo.x - 14, y], [ceo.x, y]]; }
     if (l.from === 'ceo' && t.kind === 'input') { const y = t.y + t.h * 0.35; return [[ceo.x, y], [ceo.x - 14, y], [t.x + t.w + 20, y], [t.x + t.w, y]]; }
@@ -53,7 +75,7 @@ export function createPipeline(canvas, V, prev) {
   const at = (P, u) => { const d = u * P.len; let lo = 0, hi = P.L.length - 1; while (hi - lo > 1) { const m = (lo + hi) >> 1; P.L[m] < d ? lo = m : hi = m; }
     const f = (d - P.L[lo]) / ((P.L[hi] - P.L[lo]) || 1); return [P.s[lo][0] + (P.s[hi][0] - P.s[lo][0]) * f, P.s[lo][1] + (P.s[hi][1] - P.s[lo][1]) * f]; };
   S.links.forEach((l, i) => { l.path = sample(routeOf(l, i)); l.unknown = l.count == null; l.mid = at(l.path, 0.5);
-    const n = l.unknown ? 0 : Math.min(14, 2 + Math.round(l.count)); for (let k = 0; k < n; k++) l.parts.push({ u: k / n, v: (40 + 6 * Math.min(l.count, 12)) / l.path.len });
+    const n = l.unknown ? 0 : Math.min(MOB ? 6 : 14, 2 + Math.round(l.count)); for (let k = 0; k < n; k++) l.parts.push({ u: k / n, v: (40 + 6 * Math.min(l.count, 12)) / l.path.len });
     l.spineY = l.to === 'ceo' || l.from === 'ceo' ? (l.to === 'ceo' ? l.path.s[l.path.s.length - 1][1] : l.path.s[0][1]) : null; });
   const spr = (col, r) => { const c = document.createElement('canvas'); c.width = c.height = r * 2; const g = c.getContext('2d'); const gr = g.createRadialGradient(r, r, 0, r, r, r);
     gr.addColorStop(0, rgba(col, 1)); gr.addColorStop(0.25, rgba(col, 0.55)); gr.addColorStop(1, rgba(col, 0)); g.fillStyle = gr; g.fillRect(0, 0, r * 2, r * 2); return c; };
@@ -67,7 +89,7 @@ export function createPipeline(canvas, V, prev) {
     if (FIT.size > 5000) FIT.clear(); FIT.set(key, r); return r; };
   const txt = (s, x, y, col = C.text, px = 11, w = 400, al = 'left', fam = MONO, mw = 9999) => { font(px, w, fam); ctx.fillStyle = col; ctx.textAlign = al; ctx.textBaseline = 'alphabetic'; ctx.fillText(fit(s, mw), x, y); return ctx.measureText(fit(s, mw)).width; };
   const kv = (k, v, x, y, w, vc = C.text, px = 11) => { txt(k, x, y, C.sub, px); const kw = ctx.measureText(k).width; txt(v, x + w, y, vc, px, 400, 'right', MONO, w - kw - 10); };
-  const ikv = (icon, v, x, y, w, vc = C.text, t = '', ic = C.sub) => { drawIcon(ctx, icon, x, y - 10, 12, ic, 2); txt(v, x + w, y, vc, 11, 400, 'right', MONO, w - 18); if (t) tip(x - 2, y - 12, w + 4, 15, t); };
+  const ikv = (icon, v, x, y, w, vc = C.text, t = '', ic = C.sub, mw = w - 18) => { drawIcon(ctx, icon, x, y - 10, 12, ic, 2); txt(v, x + w, y, vc, 11, 400, 'right', MONO, mw); if (t) tip(x - 2, y - 12, w + 4, 15, t); };
   const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
   const panel = (p, title, sub, acc, tmax, icon, tipHtml) => { const fl = S.flash[p.id] || 0;
     ctx.fillStyle = C.panel; ctx.fillRect(p.x, p.y, p.w, p.h); ctx.fillStyle = C.panelHd; ctx.fillRect(p.x, p.y, p.w, 26);
@@ -144,7 +166,7 @@ export function createPipeline(canvas, V, prev) {
   };
   const inputPanel = p => {
     const x = p.x + 10, w = p.w - 20; let y = p.y + 44; const R = (k, v, c) => { kv(k, v, x, y, w, c); y += 15; };
-    const RI = (icon, k, v, c) => { ikv(icon, v, x, y, w, c, k); txt(k, x + 17, y, C.dim, 10, 400, 'left', MONO, w * 0.55); y += 15; };
+    const RI = (icon, k, v, c) => { let mw; if (MOB) { font(10); mw = w - 26 - Math.min(ctx.measureText(k).width, w * 0.55); } ikv(icon, v, x, y, w, c, k, C.sub, mw); txt(k, x + 17, y, C.dim, 10, 400, 'left', MONO, w * 0.55); y += 15; };
     if (p.id === 'damon') { panel(p, 'owner', '', hue('damon'), 0, 'damon', 'human gate: the only decision-maker');
       RI('check', 'approvals logged', V.approvals ?? 'unknown', C.waiting);
       if (PUB) { RI('hourglass', 'decisions pending', (V.waitingCount ?? 'unknown'), C.waiting); RI('gate', 'gate', 'owner approves sends + spend', C.sub); }
@@ -184,7 +206,7 @@ export function createPipeline(canvas, V, prev) {
     const drawKids = (par, px, py, rr, sz) => kids(par).forEach((s, j, arr) => { const a = t * 0.9 + j / arr.length * Math.PI * 2 + (par === 'ceo' ? 0.5 : 0); const kx = px + Math.cos(a) * rr, ky = py + Math.sin(a) * rr * 0.7;
       ctx.strokeStyle = rgba(s.hue, 0.6); ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(kx, ky); ctx.stroke(); orb(kx, ky, sz, s.id, { hue: s.hue, acc: s.accent }); });
     drawKids('ceo', cx, cy, 30, 2.6);
-    const sats = ['reed', 'evelyn', 'dutchess', 'viv', 'agent_builder', 'friend', 'motion', 'product_manager'].filter(id => V.A[id]);
+    const sats = ['reed', 'evelyn', 'dutchess', 'viv', 'agent_builder', 'friend', 'motion', 'product_manager', 'cto', 'cso'].filter(id => V.A[id]);
     sats.forEach((id, i) => { const ang = t * 0.35 + i / sats.length * Math.PI * 2; const sx = cx + Math.cos(ang) * p.w * 0.38, sy = cy + Math.sin(ang) * 46 + 6; const ag = V.A[id], f = S.flash[id] || 0;
       ctx.globalAlpha = Math.sin(ang) > -0.2 ? 1 : 0.55; drawKids(id, sx, sy, 12, 1.6);
       orb(sx, sy, 3 + f * 2, id, { status: STATUS_RING(ag.tag, BLK.agents.get(id)) }); drawIcon(ctx, AICON[id], sx + 6, sy - 15, 10, hue(id), 2); });
@@ -199,7 +221,7 @@ export function createPipeline(canvas, V, prev) {
     STG.forEach((sname, i) => { const L = I.streams.stages[i]; drawIcon(ctx, STGI[i], x, y - 9, 11, i === 4 ? C.waiting : C.sub, 2); txt(sname, x + 15, y, C.sub, 10, 400, 'left', MONO, 66);
       if (L?.id) { chip(L.id, x + 92, y - 3.5, 6.5); segBar(x + 102, y - 6, w - 104 - 30, L.share * 100, hue(L.id), 8, 5); txt(Math.round(L.share * 100) + '%', x + w, y, hue(L.id), 9, 700, 'right'); } else txt('n/a', x + w, y, C.dim, 9, 400, 'right');
       tip(x - 2, y - 11, w + 4, 15, leadTip(L, sname + ' stage')); y += 15; }); };
-  const ids8 = ['ceo', 'reed', 'evelyn', 'dutchess', 'skill_finder', 'up_skiller', 'viv', 'agent_builder', 'friend', 'motion', 'product_manager'].filter(id => V.A[id]);
+  const ids8 = ['ceo', 'reed', 'evelyn', 'dutchess', 'skill_finder', 'up_skiller', 'viv', 'agent_builder', 'friend', 'motion', 'product_manager', 'cto', 'cso'].filter(id => V.A[id]);
   const t0 = new Date(V.events[0].time).getTime(), t1 = new Date(V.events[V.events.length - 1].time).getTime();
   const NB = 24, bw = (t1 - t0) / NB + 1;
   const SG = ids8.map(id => { const row = new Array(NB).fill(0); V.events.forEach(e => { if (e.agent === id || e.route.some(r => r.includes(id))) row[Math.min(NB - 1, Math.floor((new Date(e.time) - t0) / bw))]++; }); return row; });
@@ -230,33 +252,34 @@ export function createPipeline(canvas, V, prev) {
     ctx.globalAlpha = 1; txt('team $ replay events ' + (Math.floor(V.now * 2) % 2 ? '█' : ''), x, p.y + p.h - 8, C.active, 10); };
   const B = I.board;
   const board = (p, t, dt) => { panel(p, 'agent leaderboard', 'live', C.active, 0, 'trophy', `<b>Agent Leaderboard</b><br>All metrics from the real timeline; n/a = not enough data.<br><span class="tm">${esc(FORMULAS.top)}</span>`);
-    const x = p.x + 8, tw = (p.w - 16 - 15) / 4;
+    const x = p.x + 8, NW = p.w < BOARD_NARROW, tw = NW ? (p.w - 16 - 5) / 2 : (p.w - 16 - 15) / 4;
     const tiles = [['zap', 'works most', B.works, r => `${r.w24} · 24h`, FORMULAS.works],
       ['target', 'effective', B.effective, r => Math.round(r.eff * 100) + '%', FORMULAS.effective],
       ['hourglass', 'idles most', B.idle, r => r.idleH < 48 ? r.idleH.toFixed(1) + 'h' : Math.floor(r.idleH / 24) + 'd ' + Math.round(r.idleH % 24) + 'h', FORMULAS.idle],
       ['medal', '#1 overall', B.top, r => r.score + (r.partial ? '*' : ''), FORMULAS.top]];
-    tiles.forEach(([ic, lab, r, fmt, f], i) => { const tx = x + i * (tw + 5), ty = p.y + 33, th = 64, hu = r ? hue(r.id) : C.dim, g = r && S.lbGlow['t' + i] || 0;
+    tiles.forEach(([ic, lab, r, fmt, f], i) => { const tx = x + (NW ? i % 2 : i) * (tw + 5), ty = p.y + 33 + (NW ? Math.floor(i / 2) * 69 : 0), th = 64, hu = r ? hue(r.id) : C.dim, g = r && S.lbGlow['t' + i] || 0;
       ctx.fillStyle = rgba(hu, 0.08 + 0.12 * g); ctx.fillRect(tx, ty, tw, th); ctx.strokeStyle = rgba(hu, 0.5); ctx.strokeRect(tx + .5, ty + .5, tw - 1, th - 1);
       drawIcon(ctx, ic, tx + 5, ty + 5, 12, i === 2 ? C.waiting : C.active, 2.2); txt(lab, tx + 20, ty + 14, C.sub, 9, 400, 'left', MONO, tw - 22);
       if (r) { chip(r.id, tx + 13, ty + 32, 8); txt(short(r.id, V.A), tx + 25, ty + 36, hu, 10, 700, 'left', MONO, tw - 27); txt(fmt(r), tx + tw / 2, ty + 56, C.text, 11, 700, 'center', MONO, tw - 6); }
       else txt('n/a', tx + tw / 2, ty + 40, C.dim, 11, 700, 'center');
       tip(tx, ty, tw, th, `<b>${esc(lab)}</b>${r ? `: <b style="color:${hu}">${esc(V.A[r.id].name)}</b> · ${esc(fmt(r))}${i === 0 ? ' (' + r.w7 + ' in 7 d)' : ''}` : ': n/a'}<br><span class="tm">${esc(f)}</span>`); });
-    const ly = p.y + 112, rh = 13.2; txt('#', x + 2, ly, C.dim, 9); txt('agent', x + 30, ly, C.dim, 9); txt('7d', x + 140, ly, C.dim, 9, 400, 'right'); txt('eff', x + 178, ly, C.dim, 9, 400, 'right'); txt('idle', x + 214, ly, C.dim, 9, 400, 'right'); txt('score', p.x + p.w - 10, ly, C.dim, 9, 400, 'right');
+    const ly = p.y + (NW ? 186 : 112), rh = NW ? 14 : 13.2, rx = p.x + p.w - 10, c7 = NW ? rx - 112 : x + 140, cE = NW ? rx - 72 : x + 178, cI = NW ? rx - 38 : x + 214, nmW = NW ? c7 - 24 - (x + 31) : 74;
+    txt('#', x + 2, ly, C.dim, 9); txt('agent', x + 30, ly, C.dim, 9); txt('7d', c7, ly, C.dim, 9, 400, 'right'); txt('eff', cE, ly, C.dim, 9, 400, 'right'); txt('idle', cI, ly, C.dim, 9, 400, 'right'); txt('score', rx, ly, C.dim, 9, 400, 'right');
     const list = [...B.rank, ...B.rows.filter(r => r.score == null)];
     list.forEach((r, i) => { const target = ly + 6 + i * rh; if (S.lbY[r.id] == null) S.lbY[r.id] = target; S.lbY[r.id] += (target - S.lbY[r.id]) * Math.min(1, dt * 4);
       if (S.lbRank[r.id] != null && r.rank != null && S.lbRank[r.id] !== r.rank) S.lbGlow[r.id] = 1; S.lbRank[r.id] = r.rank; S.lbGlow[r.id] = (S.lbGlow[r.id] || 0) * Math.pow(0.3, dt);
       const yy = S.lbY[r.id], hu = hue(r.id), g = S.lbGlow[r.id] || 0; if (g > 0.02) { ctx.fillStyle = rgba(hu, 0.25 * g); ctx.fillRect(x, yy, p.w - 16, rh - 1); }
-      txt(r.rank ? String(r.rank) : '–', x + 4, yy + 10, r.rank === 1 ? C.active : C.sub, 10, 700); chip(r.id, x + 22, yy + 6, 5.5); txt(short(r.id, V.A), x + 31, yy + 10, r.score == null ? C.dim : C.text, 10, 400, 'left', MONO, 74);
-      txt(String(r.w7), x + 140, yy + 10, C.sub, 9.5, 400, 'right'); txt(r.eff == null ? 'n/a' : Math.round(r.eff * 100) + '%', x + 178, yy + 10, r.eff == null ? C.dim : C.sub, 9.5, 400, 'right');
-      txt(r.idleH == null ? 'n/a' : r.idleH < 48 ? r.idleH.toFixed(0) + 'h' : Math.floor(r.idleH / 24) + 'd', x + 214, yy + 10, r.idleH == null ? C.dim : r.idleH > 24 ? C.waiting : C.sub, 9.5, 400, 'right');
-      if (r.score != null) { const bwid = p.w - 16 - 228 - 28; ctx.fillStyle = C.muted; ctx.fillRect(x + 222, yy + 4, bwid, 5); ctx.fillStyle = hu; ctx.fillRect(x + 222, yy + 4, bwid * r.score / 100 * (0.97 + 0.03 * Math.sin(t * 2 + i)), 5); }
+      txt(r.rank ? String(r.rank) : '–', x + 4, yy + 10, r.rank === 1 ? C.active : C.sub, 10, 700); chip(r.id, x + 22, yy + 6, 5.5); txt(short(r.id, V.A), x + 31, yy + 10, r.score == null ? C.dim : C.text, 10, 400, 'left', MONO, nmW);
+      txt(String(r.w7), c7, yy + 10, C.sub, 9.5, 400, 'right'); txt(r.eff == null ? 'n/a' : Math.round(r.eff * 100) + '%', cE, yy + 10, r.eff == null ? C.dim : C.sub, 9.5, 400, 'right');
+      txt(r.idleH == null ? 'n/a' : r.idleH < 48 ? r.idleH.toFixed(0) + 'h' : Math.floor(r.idleH / 24) + 'd', cI, yy + 10, r.idleH == null ? C.dim : r.idleH > 24 ? C.waiting : C.sub, 9.5, 400, 'right');
+      if (r.score != null && !NW) { const bwid = p.w - 16 - 228 - 28; ctx.fillStyle = C.muted; ctx.fillRect(x + 222, yy + 4, bwid, 5); ctx.fillStyle = hu; ctx.fillRect(x + 222, yy + 4, bwid * r.score / 100 * (0.97 + 0.03 * Math.sin(t * 2 + i)), 5); }
       txt(r.score == null ? 'n/a' : r.score + (r.partial ? '*' : ''), p.x + p.w - 10, yy + 10, r.score == null ? C.dim : r.rank === 1 ? C.active : C.text, 10, 700, 'right');
       tip(x, yy, p.w - 16, rh, `<b style="color:${hu}">${esc(V.A[r.id].name)}</b> ${r.rank ? '· rank #' + r.rank : '· not ranked (no events in 7 d)'}<br>work: ${r.w24} events/24h · ${r.w7}/7d${r.W != null ? ' (W ' + r.W.toFixed(2) + ')' : ''}<br>effectiveness: ${r.eff == null ? 'n/a (denominator ' + r.den + ' < 2)' : Math.round(r.eff * 100) + '% = (' + r.completed + ' done) / ' + r.den}<br>idle: ${r.idleH == null ? 'n/a' : r.idleH.toFixed(1) + ' h'} · active share 24h ${Math.round(r.activeShare * 100)}%${r.R != null ? ' (R ' + r.R.toFixed(2) + ')' : ''}<br>score: ${r.score == null ? 'n/a' : r.score + (r.partial ? ' (* missing term dropped, weights renormalised)' : '')}`); });
   };
   const ring = (cx, cy, r, lw, pct, col) => { ctx.lineWidth = lw; ctx.strokeStyle = C.muted; ctx.beginPath(); ctx.arc(cx, cy, r, 0, 7); ctx.stroke();
     if (pct) { ctx.strokeStyle = col; ctx.beginPath(); ctx.arc(cx, cy, r, -Math.PI / 2, -Math.PI / 2 + 2 * Math.PI * pct / 100); ctx.stroke(); } ctx.lineWidth = 1; };
   const projRows = (x, y0, w, rows) => rows.forEach(([lab, name, note, ic], i) => { const pr = D.projects.find(q => q.name === name), y = y0 + i * 18, pc = pr ? pr.pct : null;
-    drawIcon(ctx, ic || 'project', x, y - 10, 12, C.sub, 2); txt(lab, x + 17, y, C.text, 10, 700, 'left', MONO, 110); if (note) txt(note, x + 130, y, C.waiting, 9, 400, 'left', MONO, 70);
+    drawIcon(ctx, ic || 'project', x, y - 10, 12, C.sub, 2); txt(lab, x + 17, y, C.text, 10, 700, 'left', MONO, Math.min(110, w - 142)); if (note) txt(note, x + 130, y, C.waiting, 9, 400, 'left', MONO, 70);
     const bk = BLK.projects.has(name); segBar(x + w - 120, y - 7, 80, pc, pc >= 50 ? C.active : C.waiting, 10, 6); 
     txt(pc == null ? 'n/a' : pc + '%', x + w, y, C.text, 10, 700, 'right'); tip(x - 2, y - 12, w + 4, 16, `<b>${esc(name)}</b>: ${pc == null ? 'n/a' : pc + '%'}${pr && pr.formula && !PUB ? '<br><span class="tm">' + esc(pr.formula) + '</span>' : ''}`); });
   const output = (p, t) => {
@@ -282,24 +305,26 @@ export function createPipeline(canvas, V, prev) {
     event(e) { S.cursor = e; S.log.push({ e, at: V.now }); if (S.log.length > 40) S.log.shift(); S.flash[e.agent] = 1;
       e.route.forEach(([f, to]) => { const l = S.links.find(x => x.from === f && x.to === to) || S.links.find(x => x.from === to && x.to === f); if (l) l.tracers.push({ u: 0, col: hue(f) }); }); },
     flowLead(e) { const r = (e.route || [])[0]; if (!r) return null; const l = S.links.find(x => (x.from === r[0] && x.to === r[1]) || (x.from === r[1] && x.to === r[0])); return l ? { link: l, lead: l.lead } : null; },
-    frame(t, dt, vw, vh) {
-      if (!S.born) S.born = t; const dpr = devicePixelRatio || 1; S.tips = [];
+    frame(t, dt, vw, vh, scrollY) {
+      if (!S.born) S.born = t; const dpr = Math.min(2, devicePixelRatio || 1); S.tips = [];
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.fillStyle = C.bg; ctx.fillRect(0, 0, vw, vh);
-      const z = Math.min(vw / W, vh / H), ox = (vw - W * z) / 2, oy = (vh - H * z) / 2; S.view = { z, ox, oy };
+      const z = MOB ? vw / WW : Math.min(vw / W, vh / H), ox = MOB ? 0 : (vw - W * z) / 2, oy = MOB ? -(scrollY || 0) : (vh - H * z) / 2; S.view = { z, ox, oy };
+      const wy0 = -oy / z - 20, wy1 = (vh - oy) / z + 20;
       ctx.strokeStyle = C.grid; ctx.beginPath(); const gs = 40 * z; for (let x = ox % gs; x < vw; x += gs) { ctx.moveTo(x, 0); ctx.lineTo(x, vh); } for (let y = oy % gs; y < vh; y += gs) { ctx.moveTo(0, y); ctx.lineTo(vw, y); } ctx.stroke();
       ctx.save(); ctx.translate(ox, oy); ctx.scale(z, z);
       Object.keys(S.flash).forEach(k => S.flash[k] *= Math.pow(0.15, dt));
       const r = ease((t - S.born) / 1.2);
       ctx.globalAlpha = r; drawLinks(dt, ease((t - S.born - 0.3) / 1.0)); ctx.globalAlpha = 1;
       const linkTips = S.tips; S.tips = [];
-      Object.values(S.panels).forEach(p => { ctx.save(); ctx.globalAlpha = r;
+      Object.values(S.panels).forEach(p => { if (MOB && (p.y > wy1 || p.y + p.h < wy0)) return; ctx.save(); ctx.globalAlpha = r;
         if (p.kind === 'agent') agentPanel(p, V.A[p.id]); else if (p.kind === 'input') inputPanel(p); else if (p.id === 'ceo') ceoPanel(p, dt);
         else if (p.id === 'brain') brain(p, t); else if (p.id === 'streams') streams(p); else if (p.id === 'spectro') spectro(p, t); else if (p.id === 'runlog') runlog(p);
         else if (p.id === 'board') board(p, t, dt); else if (p.id === 'output') output(p, t); ctx.restore(); });
       S.tips = S.tips.concat(linkTips);
       ctx.restore();
     },
-    panels: S.panels, links: S.links, state: S,
+    panels: S.panels, links: S.links, state: S, worldW: WW, worldH: WH, mobile: MOB,
+    panelRect(id) { const p = S.panels[id]; return p ? { x: p.x, y: p.y, w: p.w, h: p.h } : null; },
     hit(cx, cy) { const { z, ox, oy } = S.view, x = (cx - ox) / z, y = (cy - oy) / z; return Object.values(S.panels).find(p => x >= p.x && x <= p.x + p.w && y >= p.y && y <= p.y + p.h)?.id || null; },
     tipAt(cx, cy) { const { z, ox, oy } = S.view, x = (cx - ox) / z, y = (cy - oy) / z; const hits = S.tips.filter(r => x >= r.x && x <= r.x + r.w && y >= r.y && y <= r.y + r.h); return hits.length ? hits.reduce((a, b) => (a.w * a.h <= b.w * b.h ? a : b)).html : null; },
   };

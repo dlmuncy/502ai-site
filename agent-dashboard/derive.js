@@ -20,7 +20,7 @@ export function derive(D) {
   const approvals = (D.links.find(l => l.from === 'damon' && l.to === 'ceo') || {}).count ?? null;
   const rev = null;
   const events = [...D.events].sort((a, b) => a.time.localeCompare(b.time));
-  const ids = ['reed', 'evelyn', 'dutchess', 'viv', 'friend', 'motion', 'agent_builder', 'skill_finder', 'up_skiller', 'product_manager'];
+  const ids = ['reed', 'evelyn', 'dutchess', 'viv', 'friend', 'motion', 'agent_builder', 'skill_finder', 'up_skiller', 'product_manager', 'cto', 'cso'];
   const routeOf = e => {
     const s = e.summary.toLowerCase(), who = e.agent;
     if (e.type === 'a2a_message') {
