@@ -1,6 +1,6 @@
 import { C, THEME } from './palette.js';
 
-export const TOP = ['ceo', 'reed', 'evelyn', 'dutchess', 'viv', 'motion', 'friend', 'agent_builder', 'product_manager', 'cto', 'cso'];
+export const TOP = ['ceo', 'reed', 'evelyn', 'dutchess', 'viv', 'motion', 'friend', 'agent_builder', 'product_manager', 'cto', 'cso', 'gemforce', 'finisher'];
 export const HUES = {
   ceo:           { name: 'CEO',           dark: '#6ea8ff', light: '#1a5fd0', family: 'blue (Google blue 800)' },
   reed:          { name: 'Reed',          dark: '#34d6f0', light: '#007b83', family: 'cyan / teal (Google cyan 900)' },
@@ -13,6 +13,8 @@ export const HUES = {
   product_manager: { name: 'Product Manager', dark: '#e0b48a', light: '#875a2c', family: 'brown / caramel (hue 30)' },
   cto:           { name: 'CTO',           dark: '#b8e86a', light: '#4d7c0f', family: 'lime / olive (Tailwind lime 700)' },
   cso:           { name: 'CSO',           dark: '#e58cff', light: '#9c27b0', family: 'orchid / purple (Material purple 500, hue ~291)' },
+  gemforce:      { name: 'GemForce',      dark: '#8fa8ff', light: '#3949ab', family: 'periwinkle / indigo (Material indigo 600)' },
+  finisher:      { name: 'Finisher v2',   dark: '#e6d3a3', light: '#5b6e00', family: 'sand / olive' },
   damon:         { name: 'Damon (human)', dark: '#ffeecc', light: '#9a5b00', family: 'cream / amber (human gate)' },
 };
 export const ACCENTS = [
@@ -43,7 +45,7 @@ export const STATUS_RING = (tag, blocked) => tag === 'waiting' || tag === 'human
   : { color: C.sub, style: 'solid', width: 1, alpha: 0.55, label: 'active' };
 
 const AG = { product_manager: 'product_manager', reed: 'reed', evelyn: 'evelyn', dutchess: 'dutchess', ceo: 'ceo', viv: 'viv', motion: 'motion', friend: 'friend', cto: 'cto', cso: 'cso' };
-const KNOWN_POSTERS = new Set(['ceo', 'reed', 'evelyn', 'dutchess', 'viv', 'damon', 'skill-finder', 'up-skiller', 'motion', 'friend', 'product-manager', 'pm', 'cto', 'cso']);
+const KNOWN_POSTERS = new Set(['ceo', 'reed', 'evelyn', 'dutchess', 'viv', 'damon', 'skill-finder', 'up-skiller', 'motion', 'friend', 'product-manager', 'pm', 'cto', 'cso', 'gemforce', 'finisher2', 'workpack-reed', 'workpack-evelyn', 'workpack-dutchess']);
 const hubTs = s => { const m = /^(\d{4})(\d\d)(\d\d)-(\d\d)(\d\d)(\d\d)/.exec(s || ''); return m ? new Date(Date.UTC(+m[1], m[2] - 1, +m[3], +m[4], +m[5], +m[6])).toISOString() : null; };
 export function subAgents(V, opts = {}) {
   const maxPer = opts.maxPer ?? 3, windowH = opts.windowH ?? 48;

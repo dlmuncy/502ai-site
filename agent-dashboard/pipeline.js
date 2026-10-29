@@ -6,7 +6,7 @@ import { STEPS, FORMULAS, stepOf } from './insights.js';
 export const W = 1760, H = 840;
 const PUB = typeof window !== 'undefined' && !!window.DASH_PUBLIC;
 const ease = t => t < 0 ? 0 : t > 1 ? 1 : t * t * (3 - 2 * t);
-export const AICON = { ceo: 'ceo', reed: 'reed', evelyn: 'evelyn', dutchess: 'dutchess', viv: 'viv', motion: 'motion', friend: 'friend', agent_builder: 'agent_builder', skill_finder: 'skill_finder', up_skiller: 'up_skiller', product_manager: 'product_manager', cto: 'cto', cso: 'cso', damon: 'damon' };
+export const AICON = { ceo: 'ceo', reed: 'reed', evelyn: 'evelyn', dutchess: 'dutchess', viv: 'viv', motion: 'motion', friend: 'friend', agent_builder: 'agent_builder', skill_finder: 'skill_finder', up_skiller: 'up_skiller', product_manager: 'product_manager', cto: 'cto', cso: 'cso', gemforce: 'gemforce', finisher: 'finisher', damon: 'damon' };
 export const SHORT = { agent_builder: 'Builder', skill_finder: 'Finder', up_skiller: 'Up-Skiller', product_manager: 'PM', cto: 'CTO', cso: 'CSO', dutchess: 'Dutchess', viv: 'Viv', ceo: 'CEO', damon: 'Damon' };
 const short = (id, A) => SHORT[id] || (A[id]?.name || id);
 const STG = ['intake', 'route', 'execute', 'QA', 'human gate', 'outcome'];
