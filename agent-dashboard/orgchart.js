@@ -94,7 +94,7 @@ export function createOrg(canvas, labelLayer, V, opt = {}) {
     if (N.has('damon') && !L2 && N.has('ceo')) tree.push(['damon', 'ceo', false]);
     tree.forEach(([a, b, unk]) => { const cv = curveOf(a, b, N.get(b).kind === 'session' ? 0 : -18); const pts = cv.getPoints(32); const g = new THREE.BufferGeometry().setFromPoints(pts);
       const col = unk ? C.sub : hue(N.get(b).kind === 'session' ? a : b);
-      const m = unk ? new THREE.LineDashedMaterial({ color: C.sub, dashSize: 5, gapSize: 5, transparent: true, opacity: 0.55 }) : new THREE.LineBasicMaterial({ color: col, transparent: true, opacity: L ? 0.55 : 0.38 });
+      const m = unk ? new THREE.LineDashedMaterial({ color: C.sub, dashSize: 5, gapSize: 5, transparent: true, opacity: 0.55, depthWrite: false }) : new THREE.LineBasicMaterial({ color: col, transparent: true, opacity: L ? 0.55 : 0.38, depthWrite: false });
       const ln = new THREE.Line(g, m); if (unk) ln.computeLineDistances(); root.add(ln); E.set(ek(a, b), { a, b, curve: cv, line: ln, base: m.opacity, tree: true }); });
     const fan = t => /team|reed\/evelyn\/dutchess/.test(t) ? ['reed', 'evelyn', 'dutchess'] : [t === 'board' ? 'drive' : t];
     const flows = new Map();
@@ -104,7 +104,7 @@ export function createOrg(canvas, labelLayer, V, opt = {}) {
     addFlow('hub', 'ceo', V.D.meta?.hub_posts ?? null);
     flows.forEach(fl => { const k = ek(fl.f, fl.t); if (E.has(k)) return; const unk = fl.count == null && ![...flows.values()].some(o => ek(o.f, o.t) === k && o.count != null);
       const cv = curveOf(fl.f, fl.t, 70); const g = new THREE.BufferGeometry().setFromPoints(cv.getPoints(40));
-      const m = unk ? new THREE.LineDashedMaterial({ color: C.sub, dashSize: 6, gapSize: 7, transparent: true, opacity: L ? 0.45 : 0.3 }) : new THREE.LineBasicMaterial({ color: L ? '#8fa3bf' : C.active, transparent: true, opacity: L ? 0.45 : 0.16 });
+      const m = unk ? new THREE.LineDashedMaterial({ color: C.sub, dashSize: 6, gapSize: 7, transparent: true, opacity: L ? 0.45 : 0.3, depthWrite: false }) : new THREE.LineBasicMaterial({ color: L ? '#8fa3bf' : C.active, transparent: true, opacity: L ? 0.45 : 0.16, depthWrite: false });
       const ln = new THREE.Line(g, m); if (unk) ln.computeLineDistances(); root.add(ln); E.set(k, { a: fl.f, b: fl.t, curve: cv, line: ln, base: m.opacity }); });
     const PF = []; flows.forEach(fl => { if (!fl.count) return; const e = E.get(ek(fl.f, fl.t)); const n = Math.min(lite ? 5 : 9, 1 + Math.round(fl.count * 0.55));
       const col = new THREE.Color(N.get(fl.f).kind === 'res' ? C.sub : hue(fl.f)); for (let i = 0; i < n; i++) PF.push({ e, rev: e.a !== fl.f, u: i / n + Math.random() * 0.05, v: 0.07 + 0.012 * Math.min(fl.count, 14), col }); });
@@ -118,10 +118,10 @@ export function createOrg(canvas, labelLayer, V, opt = {}) {
       n.glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, color: h, transparent: true, depthWrite: false, opacity: L ? 0.22 : 0.5, blending: L ? THREE.NormalBlending : THREE.AdditiveBlending }));
       n.glow.scale.set(s * (L ? 2 : 2.6), s * (L ? 2 : 2.6), 1); n.glow.position.copy(n.p); root.add(n.glow);
       const ic = n.kind === 'res' ? ICON_OF[n.id] : n.kind === 'session' ? null : n.id;
-      n.badge = new THREE.Sprite(new THREE.SpriteMaterial({ map: badgeTex(ic, h, n.kind === 'res' ? 'square' : 'circle'), transparent: true, depthWrite: true, alphaTest: 0.05 })); n.badge.scale.set(s, s, 1); n.badge.position.copy(n.p); root.add(n.badge);
-      if (n.kind !== 'res' && n.kind !== 'session' && V.A[n.id]) { n.ring = new THREE.Sprite(new THREE.SpriteMaterial({ map: RT.solid, color: C.sub, transparent: true, depthWrite: false })); n.ring.scale.set(s * 1.34, s * 1.34, 1); n.ring.position.copy(n.p); root.add(n.ring); }
+      n.badge = new THREE.Sprite(new THREE.SpriteMaterial({ map: badgeTex(ic, h, n.kind === 'res' ? 'square' : 'circle'), transparent: true, depthWrite: true, alphaTest: 0.05 })); n.badge.scale.set(s, s, 1); n.badge.position.copy(n.p); n.badge.renderOrder = 2; root.add(n.badge);
+      if (n.kind !== 'res' && n.kind !== 'session' && V.A[n.id]) { n.ring = new THREE.Sprite(new THREE.SpriteMaterial({ map: RT.solid, color: C.sub, transparent: true, depthWrite: false })); n.ring.scale.set(s * 1.34, s * 1.34, 1); n.ring.position.copy(n.p); n.ring.renderOrder = 3; root.add(n.ring); }
       if (n.sub || n.kind === 'sub') { const sid = n.kind === 'sub' ? n.id : n.sub.id; const ac = accent(sid).color;
-        n.arc = new THREE.Sprite(new THREE.SpriteMaterial({ map: RT.arc, color: ac, transparent: true, depthWrite: false })); n.arc.scale.set(s * 1.55, s * 1.55, 1); n.arc.position.copy(n.p); root.add(n.arc);
+        n.arc = new THREE.Sprite(new THREE.SpriteMaterial({ map: RT.arc, color: ac, transparent: true, depthWrite: false })); n.arc.scale.set(s * 1.55, s * 1.55, 1); n.arc.position.copy(n.p); n.arc.renderOrder = 3; root.add(n.arc);
         n.dot = new THREE.Mesh(new THREE.SphereGeometry(Math.max(2.2, s * 0.09), 10, 8), new THREE.MeshBasicMaterial({ color: ac })); root.add(n.dot); n.ph = accent(sid).ix; }
       if (labelLayer && opt.labels) { const el = document.createElement('div'); el.className = 'olabel' + (n.kind === 'session' ? ' s' : '') + (n.kind === 'res' ? ' r' : ''); labelLayer.appendChild(el); n.el = el; } });
     const t1 = V.events.length ? new Date(V.events[V.events.length - 1].time).getTime() : 0;
