@@ -13,7 +13,7 @@ const ICON_E = { github: 'github', gdrive: 'drive', vercel: 'triangle', render: 
 const MPOS_ORDER = ['grok', 'oracle', 'contabo'];
 
 const mname = o => PUB ? (o.pub ?? o.name) : (o.name ?? o.pub);
-const SHORT = { viv: 'Viv', product_manager: 'Product Mgr', agent_builder: 'Agent Builder', dutchess: 'Dutchess', finisher: 'Finisher', damon: 'Damon' };
+const SHORT = { viv: 'Viv', product_manager: 'Product Mgr', agent_builder: 'Agent Builder', dutchess: 'Dutchess', finisher: 'Finisher', qa_bot: 'QA Bot', damon: 'Damon' };
 const tsOf = s => { if (!s) return 0; const t = typeof s === 'number' ? s : Date.parse(s); return isNaN(t) ? 0 : t; };
 const hubT = ts => Date.UTC(+ts.slice(0, 4), +ts.slice(4, 6) - 1, +ts.slice(6, 8), +ts.slice(9, 11), +ts.slice(11, 13), +ts.slice(13, 15));
 const agoS = t => { if (!t) return 'unknown'; const s = Math.max(0, (Date.now() - t) / 1000); if (s < 90) return 'just now'; if (s < 3600) return Math.round(s / 60) + ' min ago'; if (s < 86400) return Math.round(s / 3600) + ' h ago'; return Math.round(s / 86400) + ' d ago'; };
@@ -51,7 +51,7 @@ export function createEco(wrap, V, opt = {}) {
   const done24 = id => { const p = E()?.profiles?.[id]; const now = Date.now(); const a = (p?.done_times || []).map(tsOf); return { n24: a.filter(t => now - t < H24).length, n7: a.filter(t => now - t < 7 * H24).length, total: a.length, last: a.length ? Math.max(...a) : 0 }; };
   const counts = () => { const c = { working: 0, recent: 0, idle: 0 }; for (const n of nodes) if (n.type === 'agent') c[n.st.s]++; return c; };
 
-  const AGENT_ORDER = ['ceo', 'cto', 'cso', 'product_manager', 'agent_builder', 'friend', 'motion'];
+  const AGENT_ORDER = ['ceo', 'cto', 'cso', 'qa_bot', 'product_manager', 'agent_builder', 'friend', 'motion'];
   const VPS_AGENTS = ['reed', 'evelyn', 'dutchess', 'skill_finder', 'up_skiller', 'gemforce', 'finisher'];
   function layout() {
     const e = E(); nodes = []; byId = new Map(); links = []; if (!e) return;
