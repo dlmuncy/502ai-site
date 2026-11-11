@@ -1,6 +1,6 @@
 import { C, THEME } from './palette.js';
 
-export const TOP = ['ceo', 'reed', 'evelyn', 'dutchess', 'viv', 'motion', 'friend', 'agent_builder', 'product_manager', 'cto', 'cso', 'qa_bot', 'gemforce', 'finisher'];
+export const TOP = ['ceo', 'reed', 'evelyn', 'dutchess', 'viv', 'motion', 'friend', 'agent_builder', 'product_manager', 'cto', 'cso', 'qa_bot', 'gemforce', 'finisher', 'skill_finder', 'up_skiller', 'project-scout', 'standby', 'hermes'];
 export const HUES = {
   ceo:           { name: 'CEO',           dark: '#6ea8ff', light: '#1a5fd0', family: 'blue (Google blue 800)' },
   reed:          { name: 'Reed',          dark: '#34d6f0', light: '#007b83', family: 'cyan / teal (Google cyan 900)' },
