@@ -1,0 +1,2 @@
+# 502 AI Site llms.txt
+This file provides information about the 502 AI model for LLM crawlers.
